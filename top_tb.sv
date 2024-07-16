@@ -33,6 +33,11 @@ module top_tb(
     bit [15:0] apriori = 0;
     bit valid_apriori, valid_apriori_i;
 
+
+	integer init_branch1i, init_branch2i;
+	bit [15:0] init_branch1, init_branch2;
+	bit valid_out;
+
     integer in_512, apriori_512;
     string line;
 
@@ -88,7 +93,25 @@ module top_tb(
         .valid_in       (valid),
         .valid_apriori  (valid_apriori_i),
         .apriori        (apriori),
-        .blklen         ()
+        .blklen         (),
+		//
+		.init_branch1_t (init_branch1),
+		.init_branch2_t (init_branch2),
+		.valid_out		(valid_out)
     );
+
+	initial begin
+		init_branch1i = $fopen("init_branch1.txt", "w");
+		init_branch2i = $fopen("init_branch2.txt", "w");
+	end
+
+
+	always_comb begin
+		if (valid_out) begin
+			$fdisplay(init_branch1i, $signed(init_branch1));
+			$fdisplay(init_branch2i, $signed(init_branch2));
+		end
+	end
+
 
 endmodule

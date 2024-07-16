@@ -28,7 +28,11 @@ module top(
         valid_in,
         valid_apriori,
         apriori,
-        blklen
+        blklen,
+		//
+		init_branch1_t,
+		init_branch2_t,
+		valid_out,
     );
 
     input           clk;  
@@ -38,6 +42,9 @@ module top(
     input           valid_apriori;
     input   [15:0]  blklen;
     input   [15:0]  apriori;
+	output	[15:0]	init_branch1_t;
+	output	[15:0]	init_branch2_t;
+	output			valid_out;
 
     
     reg select;
@@ -101,8 +108,9 @@ module top(
     assign init_branch2 = (div_branch2_i[0] & div_branch2_i[15]) ? ~(div_branch2_i + 16'hFFFF) : ~div_branch2_i + 1'b1;
 
 
-
-    
+	assign init_branch1_t = init_branch1;
+	assign init_branch2_t = init_branch2;
+    assign valid_out = select;
  
     
 
