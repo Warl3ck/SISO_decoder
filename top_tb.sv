@@ -35,11 +35,13 @@ module top_tb(
 
 
 	integer init_branch1i, init_branch2i;
+    integer init_branch1_r, init_branch2_r;
+
 	bit [15:0] init_branch1, init_branch2;
 	bit valid_out;
 
     integer in_512, apriori_512;
-    string line;
+    string line, line_r1, line_r2;
 
     event reset_complete;
 
@@ -103,15 +105,26 @@ module top_tb(
 	initial begin
 		init_branch1i = $fopen("init_branch1.txt", "w");
 		init_branch2i = $fopen("init_branch2.txt", "w");
+        init_branch1_r = $fopen("init_branch1m.txt", "r");
+        init_branch2_r = $fopen("init_branch2m.txt", "r");
 	end
 
 
 	always_comb begin
 		if (valid_out) begin
+            // write to file
 			$fdisplay(init_branch1i, $signed(init_branch1));
 			$fdisplay(init_branch2i, $signed(init_branch2));
+            // 
+            $fgets(line_r1,init_branch1_r);
+            $fgets(line_r2,init_branch2_r);
+			$display(line_r1.atoi(), $signed(init_branch1), "|", line_r2.atoi(), $signed(init_branch2));
+            if (line_r1.atoi() !== $signed(init_branch1) || line_r2.atoi() !== $signed(init_branch2))
+				$display ("error");
 		end
 	end
+
+    
 
 
 endmodule
