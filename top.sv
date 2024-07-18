@@ -71,6 +71,8 @@ module top
     wire sys_parity_valid;
     wire [15:0] init_branch1, init_branch2;
     wire valid_branch_i;
+	wire valid_alpha_i;
+	wire [15:0] alpha_0_i, alpha_1_i, alpha_2_i, alpha_3_i, alpha_4_i, alpha_5_i, alpha_6_i, alpha_7_i;
 
     sys_parity sys_parity_inst
     (
@@ -105,15 +107,15 @@ module top
         .valid_branch       (valid_branch_i),
         .init_branch1       (init_branch1),
         .init_branch2       (init_branch2),
-        .alpha_0            (alpha_0),
-        .alpha_1            (alpha_1),
-        .alpha_2            (alpha_2),
-        .alpha_3            (alpha_3),
-        .alpha_4            (alpha_4),
-        .alpha_5            (alpha_5),
-        .alpha_6            (alpha_6),
-        .alpha_7            (alpha_7),
-        .valid_alpha        ()
+        .alpha_0            (alpha_0_i),
+        .alpha_1            (alpha_1_i),
+        .alpha_2            (alpha_2_i),
+        .alpha_3            (alpha_3_i),
+        .alpha_4            (alpha_4_i),
+        .alpha_5            (alpha_5_i),
+        .alpha_6            (alpha_6_i),
+        .alpha_7            (alpha_7_i),
+        .valid_alpha        (valid_alpha_i)
     );
 
 
@@ -148,16 +150,6 @@ module top
     output [15:0] beta_5;
     output [15:0] beta_6;
     output [15:0] beta_7;
-
-
-    //     beta(1,k)=max((beta(1,k+1)+init_branch1(k)),(beta(5,k+1)-init_branch1(k))) ;
-    //     beta(2,k)=max((beta(5,k+1)+init_branch1(k)),(beta(1,k+1)-init_branch1(k))) ;
-    //     beta(3,k)=max((beta(6,k+1)+init_branch2(k)),(beta(2,k+1)-init_branch2(k))) ;
-    //     beta(4,k)=max((beta(2,k+1)+init_branch2(k)),(beta(6,k+1)-init_branch2(k))) ;
-    //     beta(5,k)=max((beta(3,k+1)+init_branch2(k)),(beta(7,k+1)-init_branch2(k))) ;
-    //     beta(6,k)=max((beta(7,k+1)+init_branch2(k)),(beta(3,k+1)-init_branch2(k))) ;
-    //     beta(7,k)=max((beta(8,k+1)+init_branch1(k)),(beta(4,k+1)-init_branch1(k))) ;
-    //     beta(8,k)=max((beta(4,k+1)+init_branch1(k)),(beta(8,k+1)-init_branch1(k))) ;
 
     reg [15:0] init_branch_srl1 [0:515];
     reg [15:0] init_branch_srl2 [0:515];
@@ -207,10 +199,11 @@ module top
         end
         beta_0_i[0] = 0;
         beta_reg_0[0] = 0;
+
     end
 
     always_ff @(posedge clk) begin
-        if (valid_branch & counter < 516) begin
+        if (valid_branch & counter < blklen + 4) begin
             init_branch_srl1 <= {init_branch1, init_branch_srl1[0:514]};
             init_branch_srl2 <= {init_branch2, init_branch_srl2[0:514]};
             counter <= counter + 1;
@@ -218,9 +211,10 @@ module top
     end
 
     always_ff @(posedge clk) begin
-        if (counter == 516) begin
-            for (int i = 1; i < 518; i++) begin
+        if (counter == blklen + 4) begin
+            for (int i = 1; i < blklen + 6; i++) begin
                 beta_0_i[i] <= ($signed(beta_0_i[i-1] + init_branch_srl1[i-1]) > $signed(beta_4_i[i-1] - init_branch_srl1[i-1])) ? beta_0_i[i-1] + init_branch_srl1[i-1] : beta_4_i[i-1] - init_branch_srl1[i-1]; 
+				beta_0_i[i] <= ($signed(beta_0_i[i-1] + init_branch_srl1[i-1]) > $signed(beta_4_i[i-1] - init_branch_srl1[i-1])) ? beta_0_i[i-1] + init_branch_srl1[i-1] : beta_4_i[i-1] - init_branch_srl1[i-1];
                 beta_1_i[i] <= ($signed(beta_4_i[i-1] + init_branch_srl1[i-1]) > $signed(beta_0_i[i-1] - init_branch_srl1[i-1])) ? beta_4_i[i-1] + init_branch_srl1[i-1] : beta_0_i[i-1] - init_branch_srl1[i-1]; 
                 beta_2_i[i] <= ($signed(beta_5_i[i-1] + init_branch_srl2[i-1]) > $signed(beta_1_i[i-1] - init_branch_srl2[i-1])) ? beta_5_i[i-1] + init_branch_srl2[i-1] : beta_1_i[i-1] - init_branch_srl2[i-1];
                 beta_3_i[i] <= ($signed(beta_1_i[i-1] + init_branch_srl2[i-1]) > $signed(beta_5_i[i-1] - init_branch_srl2[i-1])) ? beta_1_i[i-1] + init_branch_srl2[i-1] : beta_5_i[i-1] - init_branch_srl2[i-1];
@@ -229,7 +223,7 @@ module top
                 beta_6_i[i] <= ($signed(beta_7_i[i-1] + init_branch_srl1[i-1]) > $signed(beta_3_i[i-1] - init_branch_srl1[i-1])) ? beta_7_i[i-1] + init_branch_srl1[i-1] : beta_3_i[i-1] - init_branch_srl1[i-1];
                 beta_7_i[i] <= ($signed(beta_3_i[i-1] + init_branch_srl1[i-1]) > $signed(beta_7_i[i-1] - init_branch_srl1[i-1])) ? beta_3_i[i-1] + init_branch_srl1[i-1] : beta_7_i[i-1] - init_branch_srl1[i-1];
             end
-            counter_i <= (counter_i > 516) ? counter_i : counter_i + 1;
+            counter_i <= (counter_i > blklen + 4) ? counter_i : counter_i + 1;
        end
     end
 
@@ -245,12 +239,75 @@ module top
                 beta_reg_6[counter_reg] <= $signed(beta_6_i[counter_reg] - beta_0_i[counter_reg]);
                 beta_reg_7[counter_reg] <= $signed(beta_7_i[counter_reg] - beta_0_i[counter_reg]);
             // end
-        counter_reg <= (counter_reg > 516) ? counter_reg : counter_reg + 1;
+        counter_reg <= (counter_reg > blklen + 4) ? counter_reg : counter_reg + 1;
         end
     end
 
 
     endmodule
+
+
+
+	module LLR 
+	(
+		clk,
+		rst,
+		valid_branch,
+        init_branch1,
+        init_branch2,
+		alpha_0,
+    	alpha_1,
+    	alpha_2,
+    	alpha_3,
+    	alpha_4,
+    	alpha_5,
+    	alpha_6,
+    	alpha_7,
+    	valid_alpha
+	);
+
+	input clk;
+    input rst;
+    input [15:0] init_branch1;
+    input [15:0] init_branch2;
+    input valid_branch;
+	input [15:0] alpha_0;
+    input [15:0] alpha_1;
+    input [15:0] alpha_2;
+    input [15:0] alpha_3;
+    input [15:0] alpha_4;
+    input [15:0] alpha_5;
+    input [15:0] alpha_6;
+    input [15:0] alpha_7;
+    input valid_alpha;
+
+	reg [15:0] alpha_0_i [0:515];
+    reg [15:0] alpha_1_i [0:515];
+    reg [15:0] alpha_2_i [0:515];
+    reg [15:0] alpha_3_i [0:515];
+    reg [15:0] alpha_4_i [0:515];
+    reg [15:0] alpha_5_i [0:515];
+    reg [15:0] alpha_6_i [0:515];
+    reg [15:0] alpha_7_i [0:515];
+
+	always_ff @(posedge clk) begin
+		if (valid_alpha) begin
+			alpha_0_i <= {alpha_0, alpha_0_i[0:514]};
+            alpha_1_i <= {alpha_1, alpha_1_i[0:514]};
+			alpha_2_i <= {alpha_2, alpha_2_i[0:514]};
+			alpha_3_i <= {alpha_3, alpha_3_i[0:514]};
+			alpha_4_i <= {alpha_4, alpha_4_i[0:514]};
+			alpha_5_i <= {alpha_5, alpha_5_i[0:514]};
+			alpha_6_i <= {alpha_6, alpha_6_i[0:514]};
+			alpha_7_i <= {alpha_7, alpha_7_i[0:514]};
+		end
+	end
+
+
+
+
+	endmodule
+
 
 
     beta beta_inst 
@@ -262,11 +319,35 @@ module top
         .init_branch2   (init_branch2)
     );
 
-
+	LLR LLR_inst
+	(
+		.clk            (clk),
+        .rst            (rst),
+        .valid_branch   (valid_branch_i),
+        .init_branch1   (init_branch1),
+        .init_branch2   (init_branch2),
+		.alpha_0		(alpha_0_i),
+    	.alpha_1		(alpha_1_i),
+    	.alpha_2		(alpha_2_i),
+    	.alpha_3		(alpha_3_i),
+    	.alpha_4		(alpha_4_i),
+    	.alpha_5		(alpha_5_i),
+    	.alpha_6		(alpha_6_i),
+    	.alpha_7		(alpha_7_i),
+    	.valid_alpha	(valid_alpha_i)
+	);
 
 	assign init_branch1_t = init_branch1;
 	assign init_branch2_t = init_branch2;
     assign valid_out = valid_branch_i;
 
+	assign alpha_0 = alpha_0_i;
+    assign alpha_1 = alpha_1_i;
+    assign alpha_2 = alpha_2_i;
+    assign alpha_3 = alpha_3_i;
+    assign alpha_4 = alpha_4_i;
+    assign alpha_5 = alpha_5_i;
+    assign alpha_6 = alpha_6_i;
+    assign alpha_7 = alpha_7_i;
 
 endmodule

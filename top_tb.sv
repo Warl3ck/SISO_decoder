@@ -47,12 +47,6 @@ module top_tb(
 
 	always #(CLK_PERIOD/2) clk_i = ~clk_i;
 	
-    // always_ff @(posedge clk_i)
-    // begin
-    //     if (valid)
-    //         in <= in + 1;
-    // end
-	
 
 	initial begin
 	 	rst <= 1'b1;
@@ -95,7 +89,7 @@ module top_tb(
         .valid_in       (valid),
         .valid_apriori  (valid_apriori_i),
         .apriori        (apriori),
-        .blklen         (),
+        .blklen         (512),
 		//
 		.init_branch1_t (init_branch1),
 		.init_branch2_t (init_branch2),
