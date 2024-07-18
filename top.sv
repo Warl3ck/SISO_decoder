@@ -118,7 +118,7 @@ module top
 
 
 
-    module beta
+    module beta 
     (
         clk,
         rst,
@@ -159,46 +159,95 @@ module top
     //     beta(7,k)=max((beta(8,k+1)+init_branch1(k)),(beta(4,k+1)-init_branch1(k))) ;
     //     beta(8,k)=max((beta(4,k+1)+init_branch1(k)),(beta(8,k+1)-init_branch1(k))) ;
 
+    reg [15:0] init_branch_srl1 [0:515];
+    reg [15:0] init_branch_srl2 [0:515];
     reg [15:0] counter = 0;
-    reg [15:0] beta_0_i [0:1] = {0, 0};
-    reg [15:0] beta_1_i [0:1] = {-128, -128};
-    reg [15:0] beta_2_i [0:1] = {-128, -128};
-    reg [15:0] beta_3_i [0:1] = {-128, -128};
-    reg [15:0] beta_4_i [0:1] = {-128, -128};
-    reg [15:0] beta_5_i [0:1] = {-128, -128};
-    reg [15:0] beta_6_i [0:1] = {-128, -128};
-    reg [15:0] beta_7_i [0:1] = {-128, -128};
+    reg [15:0] counter_i = 0;
+    reg [15:0] counter_reg = 0;
+
+
+    reg [15:0] beta_0_i [0:516];
+    reg [15:0] beta_1_i [0:516];
+    reg [15:0] beta_2_i [0:516];
+    reg [15:0] beta_3_i [0:516];
+    reg [15:0] beta_4_i [0:516];
+    reg [15:0] beta_5_i [0:516];
+    reg [15:0] beta_6_i [0:516];
+    reg [15:0] beta_7_i [0:516];
+
+    reg [15:0] beta_reg_0 [0:516];
+    reg [15:0] beta_reg_1 [0:516];
+    reg [15:0] beta_reg_2 [0:516];
+    reg [15:0] beta_reg_3 [0:516];
+    reg [15:0] beta_reg_4 [0:516];
+    reg [15:0] beta_reg_5 [0:516];
+    reg [15:0] beta_reg_6 [0:516];
+    reg [15:0] beta_reg_7 [0:516];
+    
+    
+    initial begin
+        for (int k = 0; k < 516; k++) begin
+            beta_0_i[k] = -128;
+            beta_1_i[k] = -128;
+            beta_2_i[k] = -128;
+            beta_3_i[k] = -128;
+            beta_4_i[k] = -128;
+            beta_5_i[k] = -128;
+            beta_6_i[k] = -128;
+            beta_7_i[k] = -128;
+
+            beta_reg_0[k] = -128;
+            beta_reg_1[k] = -128;
+            beta_reg_2[k] = -128;
+            beta_reg_3[k] = -128;
+            beta_reg_4[k] = -128;
+            beta_reg_5[k] = -128;
+            beta_reg_6[k] = -128;
+            beta_reg_7[k] = -128;
+        end
+        beta_0_i[0] = 0;
+        beta_reg_0[0] = 0;
+    end
 
     always_ff @(posedge clk) begin
-       if (valid_branch) begin
-           beta_0_i[0] <= ($signed(beta_0_i[1] + init_branch1) > $signed(beta_4_i[1] - init_branch1)) ? beta_0_i[1] + init_branch1 : beta_4_i[1] - init_branch1; 
-           beta_1_i[0] <= ($signed(beta_4_i[1] + init_branch1) > $signed(beta_0_i[1] - init_branch1)) ? beta_4_i[1] + init_branch1 : beta_0_i[1] - init_branch1; 
-           beta_2_i[0] <= ($signed(beta_5_i[1] + init_branch2) > $signed(beta_1_i[1] - init_branch2)) ? beta_5_i[1] + init_branch2 : beta_1_i[1] - init_branch2;
-           beta_3_i[0] <= ($signed(beta_1_i[1] + init_branch2) > $signed(beta_5_i[1] - init_branch2)) ? beta_1_i[1] + init_branch2 : beta_5_i[1] - init_branch2;
-           beta_4_i[0] <= ($signed(beta_2_i[1] + init_branch2) > $signed(beta_6_i[1] - init_branch2)) ? beta_2_i[1] + init_branch2 : beta_6_i[1] - init_branch2;
-           beta_5_i[0] <= ($signed(beta_6_i[1] + init_branch2) > $signed(beta_2_i[1] - init_branch2)) ? beta_6_i[1] + init_branch2 : beta_2_i[1] - init_branch2;
-           beta_6_i[0] <= ($signed(beta_7_i[1] + init_branch1) > $signed(beta_3_i[1] - init_branch1)) ? beta_7_i[1] + init_branch1 : beta_3_i[1] - init_branch1;
-           beta_7_i[0] <= ($signed(beta_3_i[1] + init_branch1) > $signed(beta_7_i[1] - init_branch1)) ? beta_3_i[1] + init_branch1 : beta_7_i[1] - init_branch1;
-       end else begin
-           beta_0_i[1] <= beta_0_i[0];
-           beta_1_i[1] <= beta_1_i[0];
-           beta_2_i[1] <= beta_2_i[0];
-           beta_3_i[1] <= beta_3_i[0];
-           beta_4_i[1] <= beta_4_i[0];
-           beta_5_i[1] <= beta_5_i[0];
-           beta_6_i[1] <= beta_6_i[0];
-           beta_7_i[1] <= beta_7_i[0];
+        if (valid_branch & counter < 516) begin
+            init_branch_srl1 <= {init_branch1, init_branch_srl1[0:514]};
+            init_branch_srl2 <= {init_branch2, init_branch_srl2[0:514]};
+            counter <= counter + 1;
+        end
+    end
+
+    always_ff @(posedge clk) begin
+        if (counter == 516) begin
+            for (int i = 1; i < 518; i++) begin
+                beta_0_i[i] <= ($signed(beta_0_i[i-1] + init_branch_srl1[i-1]) > $signed(beta_4_i[i-1] - init_branch_srl1[i-1])) ? beta_0_i[i-1] + init_branch_srl1[i-1] : beta_4_i[i-1] - init_branch_srl1[i-1]; 
+                beta_1_i[i] <= ($signed(beta_4_i[i-1] + init_branch_srl1[i-1]) > $signed(beta_0_i[i-1] - init_branch_srl1[i-1])) ? beta_4_i[i-1] + init_branch_srl1[i-1] : beta_0_i[i-1] - init_branch_srl1[i-1]; 
+                beta_2_i[i] <= ($signed(beta_5_i[i-1] + init_branch_srl2[i-1]) > $signed(beta_1_i[i-1] - init_branch_srl2[i-1])) ? beta_5_i[i-1] + init_branch_srl2[i-1] : beta_1_i[i-1] - init_branch_srl2[i-1];
+                beta_3_i[i] <= ($signed(beta_1_i[i-1] + init_branch_srl2[i-1]) > $signed(beta_5_i[i-1] - init_branch_srl2[i-1])) ? beta_1_i[i-1] + init_branch_srl2[i-1] : beta_5_i[i-1] - init_branch_srl2[i-1];
+                beta_4_i[i] <= ($signed(beta_2_i[i-1] + init_branch_srl2[i-1]) > $signed(beta_6_i[i-1] - init_branch_srl2[i-1])) ? beta_2_i[i-1] + init_branch_srl2[i-1] : beta_6_i[i-1] - init_branch_srl2[i-1];
+                beta_5_i[i] <= ($signed(beta_6_i[i-1] + init_branch_srl2[i-1]) > $signed(beta_2_i[i-1] - init_branch_srl2[i-1])) ? beta_6_i[i-1] + init_branch_srl2[i-1] : beta_2_i[i-1] - init_branch_srl2[i-1];
+                beta_6_i[i] <= ($signed(beta_7_i[i-1] + init_branch_srl1[i-1]) > $signed(beta_3_i[i-1] - init_branch_srl1[i-1])) ? beta_7_i[i-1] + init_branch_srl1[i-1] : beta_3_i[i-1] - init_branch_srl1[i-1];
+                beta_7_i[i] <= ($signed(beta_3_i[i-1] + init_branch_srl1[i-1]) > $signed(beta_7_i[i-1] - init_branch_srl1[i-1])) ? beta_3_i[i-1] + init_branch_srl1[i-1] : beta_7_i[i-1] - init_branch_srl1[i-1];
+            end
+            counter_i <= (counter_i > 516) ? counter_i : counter_i + 1;
        end
     end
 
-    assign beta_0 = $signed(beta_0_i[1] - beta_0_i[0]);
-    assign beta_1 = $signed(beta_1_i[1] - beta_0_i[0]);
-    assign beta_2 = $signed(beta_2_i[1] - beta_0_i[0]);
-    assign beta_3 = $signed(beta_3_i[1] - beta_0_i[0]);
-    assign beta_4 = $signed(beta_4_i[1] - beta_0_i[0]);
-    assign beta_5 = $signed(beta_5_i[1] - beta_0_i[0]);
-    assign beta_6 = $signed(beta_6_i[1] - beta_0_i[0]);
-    assign beta_7 = $signed(beta_7_i[1] - beta_0_i[0]);
+    always_ff @(posedge clk) begin
+        if (counter_i == 517) begin
+            // for (int j = 1; j < 517; j++) begin
+                beta_reg_0[counter_reg] <= $signed(beta_0_i[counter_reg] - beta_0_i[counter_reg]);
+                beta_reg_1[counter_reg] <= $signed(beta_1_i[counter_reg] - beta_0_i[counter_reg]);
+                beta_reg_2[counter_reg] <= $signed(beta_2_i[counter_reg] - beta_0_i[counter_reg]);
+                beta_reg_3[counter_reg] <= $signed(beta_3_i[counter_reg] - beta_0_i[counter_reg]);
+                beta_reg_4[counter_reg] <= $signed(beta_4_i[counter_reg] - beta_0_i[counter_reg]);
+                beta_reg_5[counter_reg] <= $signed(beta_5_i[counter_reg] - beta_0_i[counter_reg]);
+                beta_reg_6[counter_reg] <= $signed(beta_6_i[counter_reg] - beta_0_i[counter_reg]);
+                beta_reg_7[counter_reg] <= $signed(beta_7_i[counter_reg] - beta_0_i[counter_reg]);
+            // end
+        counter_reg <= (counter_reg > 516) ? counter_reg : counter_reg + 1;
+        end
+    end
 
 
     endmodule

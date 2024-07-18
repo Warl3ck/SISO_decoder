@@ -73,13 +73,13 @@ module top_tb(
             valid <= 1'b1;
             $fgets(line,in_512);
             in <= line.atoi();
-            // if (valid)
-                valid_apriori <= (!valid_apriori) ? 1'b1 : 1'b0; 
-                if (valid_apriori) begin
-                    $fgets(line,apriori_512);
-                    apriori <= line.atoi();
-                end
+            valid_apriori <= (!valid_apriori) ? 1'b1 : 1'b0; 
+            if (valid_apriori) begin
+                $fgets(line,apriori_512);
+                apriori <= line.atoi();
+            end
         end
+        valid_apriori <= 1'b0;
     end
 
     always_ff @(posedge clk_i) begin

@@ -53,7 +53,6 @@ module alpha
     output [15:0] alpha_7;
     output valid_alpha;
 
-    reg [15:0] counter = 0;
     reg [15:0] alpha_0_i [0:1] = {0, 0};
     reg [15:0] alpha_1_i [0:1] = {-128, -128};
     reg [15:0] alpha_2_i [0:1] = {-128, -128};
