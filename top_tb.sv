@@ -32,6 +32,8 @@ module top_tb(
     bit [15:0] in = 0;
     bit [15:0] apriori = 0;
     bit valid_apriori, valid_apriori_i;
+    bit [15:0] blklen;
+    bit valid_blklen;
 
 
 	integer init_branch1i, init_branch2i;
@@ -49,11 +51,20 @@ module top_tb(
 	
 
 	initial begin
+        valid_blklen <= 1'b0;
+        blklen <= 0;
 	 	rst <= 1'b1;
 		#100ns; 
 		@(posedge clk_i);
 		rst <= 1'b0;
         -> reset_complete;
+        //
+        #20ns
+        @(posedge clk_i);
+        valid_blklen <= 1'b1;
+        blklen <= 512;
+        #(CLK_PERIOD);
+        valid_blklen <= 1'b0;
 	end
 
 
@@ -73,6 +84,7 @@ module top_tb(
                 apriori <= line.atoi();
             end
         end
+        valid <= 1'b0;
         valid_apriori <= 1'b0;
     end
 
@@ -89,7 +101,8 @@ module top_tb(
         .valid_in       (valid),
         .valid_apriori  (valid_apriori_i),
         .apriori        (apriori),
-        .blklen         (512),
+        .blklen         (blklen),
+        .valid_blklen   (valid_blklen),
 		//
 		.init_branch1_t (init_branch1),
 		.init_branch2_t (init_branch2),
