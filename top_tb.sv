@@ -102,11 +102,11 @@ module top_tb(
         .valid_apriori  (valid_apriori_i),
         .apriori        (apriori),
         .blklen         (blklen),
-        .valid_blklen   (valid_blklen),
+        .valid_blklen   (valid_blklen)
 		//
-		.init_branch1_t (init_branch1),
-		.init_branch2_t (init_branch2),
-		.valid_out		(valid_out)
+		// .init_branch1_t (init_branch1),
+		// .init_branch2_t (init_branch2),
+		// .valid_out		(valid_out)
     );
 
 
