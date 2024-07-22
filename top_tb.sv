@@ -128,15 +128,15 @@ module top_tb(
     end
 
     
-	always_ff @(posedge clk_i) begin
-	if (valid_extrinsic) begin
-		counter_i <= counter_i + 1;
-		$fgets(line_ext,extrinsic0);
-		$display(counter_i, line_ext.atoi(), $signed(extrinsic));
-        if (line_ext.atoi() !== $signed(extrinsic))
-			$display ("error_sub_llr");
-	end
-	end
+	// always_ff @(posedge clk_i) begin
+	// if (valid_extrinsic) begin
+	// 	counter_i <= counter_i + 1;
+	// 	$fgets(line_ext,extrinsic0);
+	// 	$display(counter_i, line_ext.atoi(), $signed(extrinsic));
+    //     if (line_ext.atoi() !== $signed(extrinsic))
+	// 		$display ("error_sub_llr");
+	// end
+	// end
 
 // ********************************* DEBUG
 

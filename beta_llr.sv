@@ -173,6 +173,9 @@ module beta_llr #(
     reg [15:0] extrinsic_i;
 
 
+	reg valid_llr;
+
+
     // FSM
     typedef enum reg[1:0] { IDLE, CALCULATE_0, CALCULATE_1 } statetype;
     statetype state, next_state;
@@ -243,7 +246,7 @@ module beta_llr #(
                                     sys_srl <= {sys, sys_srl[0:blklen_w + 2]};
 			end
 			CALCULATE_1		: begin
-							// counter_i <= counter_i + 1;
+							counter_i <= counter_i + 1;
 							valid_i <= (!valid_i) ? 1'b1 : 1'b0; 
 
 							if (valid_i) begin
@@ -356,6 +359,8 @@ module beta_llr #(
 		end
 	end
 
+	assign valid_llr = (state == CALCULATE_1 && counter <= 515) ? valid_i : 1'b0;
+
 	always_ff @(posedge clk)
 	begin
 		llr_1_reg[0] <= llr_1[0];
@@ -456,6 +461,7 @@ module beta_llr #(
 
 
     integer llr1_0, llr1_1, llr1_2, llr1_3, llr1_4, llr1_5, llr1_6, llr1_7, llr2_0, llr2_1, llr2_2, llr2_3, llr2_4, llr2_5, llr2_6, llr2_7;
+    integer bet0,bet1,bet2,bet3,bet4,bet5,bet6,bet7;
 	integer init_branch1_r, init_branch2_r;
 	integer sub_LLR, extrinsic0, LLR;
 	integer sys_f;
@@ -463,6 +469,7 @@ module beta_llr #(
 	string line_llr, line_ext, line_sub_llr;
 	string line_r1, line_r2;
 	string line_0_0, line_0_1, line_0_2, line_0_3, line_0_4, line_0_5, line_0_6, line_0_7;
+	reg [15:0] counter_i = 0;
 
 
 	    initial begin
@@ -486,26 +493,57 @@ module beta_llr #(
 		llr2_6 = $fopen("llrm_2_6.txt", "r");
 		llr2_7 = $fopen("llrm_2_7.txt", "r");
 
-		end
 
-
-		always_ff @(posedge clk) begin
-		if(state == CALCULATE_1 && counter <= 514 && valid_i) begin
-			$fgets(line_0_0, llr1_0);
-			$fgets(line_0_1, llr1_1);
-			$fgets(line_0_2, llr1_2);
-			$fgets(line_0_3, llr1_3);
-			$fgets(line_0_4, llr1_4);
-			$fgets(line_0_5, llr1_5);
-			$fgets(line_0_6, llr1_6);
-			$fgets(line_0_7, llr1_7);
-			$display(line_0_0.atoi(), $signed(llr_1[0]), line_0_1.atoi(), $signed(llr_1[1]), line_0_2.atoi(), $signed(llr_1[2]), line_0_3.atoi(), $signed(llr_1[3]), line_0_4.atoi(), $signed(llr_1[4]),
-			line_0_5.atoi(), $signed(llr_1[5]), line_0_6.atoi(), $signed(llr_1[6]), line_0_7.atoi(), $signed(llr_1[7]));
-			if (line_0_0.atoi() !== $signed(llr_1[0]) || line_0_1.atoi() !== $signed(llr_1[1]) || line_0_2.atoi() !== $signed(llr_1[2]) || line_0_3.atoi() !== $signed(llr_1[3]) || 
-			line_0_4.atoi() !== $signed(llr_1[4]) || line_0_5.atoi() !== $signed(llr_1[5]) || line_0_6.atoi() !== $signed(llr_1[6]) || line_0_7.atoi() !== $signed(llr_1[7]))
-				$display ("error_llr1_0");
+		bet0 = $fopen("beta_0.txt", "r");
+		bet1 = $fopen("beta_1.txt", "r");
+		bet2 = $fopen("beta_2.txt", "r");
+		bet3 = $fopen("beta_3.txt", "r");
+		bet4 = $fopen("beta_4.txt", "r");
+		bet5 = $fopen("beta_5.txt", "r");
+		bet6 = $fopen("beta_6.txt", "r");
+		bet7 = $fopen("beta_7.txt", "r");
 
 		end
-	end
+
+// 	always_comb begin
+// 		if (valid_llr) begin
+// 			$fgets(line_0_0, bet0);
+// 			$fgets(line_0_1, bet1);
+// 			$fgets(line_0_2, bet2);
+// 			$fgets(line_0_3, bet3);
+// 			$fgets(line_0_4, bet4);
+// 			$fgets(line_0_5, bet5);
+// 			$fgets(line_0_6, bet6);
+// 			$fgets(line_0_7, bet7);
+
+// $display(counter_i, line_0_0.atoi(), $signed(beta_reg_0), line_0_1.atoi(), $signed(beta_reg_1), line_0_2.atoi(), $signed(beta_reg_2), line_0_3.atoi(), $signed(beta_reg_3), 
+// 		line_0_4.atoi(), $signed(beta_reg_4), line_0_5.atoi(), $signed(beta_reg_5), line_0_6.atoi(), $signed(beta_reg_6), line_0_7.atoi(), $signed(beta_reg_7));
+// 			if (line_0_0.atoi() !== $signed(beta_reg_0) || line_0_1.atoi() !== $signed(beta_reg_1) || line_0_2.atoi() !== $signed(beta_reg_2) || line_0_3.atoi() !== $signed(beta_reg_3) || 
+// 			line_0_4.atoi() !== $signed(beta_reg_4) || line_0_5.atoi() !== $signed(beta_reg_5) || line_0_6.atoi() !== $signed(beta_reg_6) || line_0_7.atoi() !== $signed(beta_reg_7))
+// 				$display ("error_llr1_0");
+// 		end
+
+	// end
+
+
+
+	// 	always_comb
+	// 	begin
+	// 	if(valid_llr) begin
+	// 		$fgets(line_0_0, llr1_0);
+	// 		$fgets(line_0_1, llr1_1);
+	// 		$fgets(line_0_2, llr1_2);
+	// 		$fgets(line_0_3, llr1_3);
+	// 		$fgets(line_0_4, llr1_4);
+	// 		$fgets(line_0_5, llr1_5);
+	// 		$fgets(line_0_6, llr1_6);
+	// 		$fgets(line_0_7, llr1_7);
+	// 		$display(line_0_0.atoi(), 	$signed(llr_1[0]), 	line_0_1.atoi(), 	$signed(llr_1[1]), 	line_0_2.atoi(), 	$signed(llr_1[2]), 	line_0_3.atoi(), 	$signed(llr_1[3]), 	line_0_4.atoi(), 	$signed(llr_1[4]),
+	// 		line_0_5.atoi(), 	$signed(llr_1[5]), 	line_0_6.atoi(), 	$signed(llr_1[6]), 	line_0_7.atoi(), 	$signed(llr_1[7]));
+	// 		if (line_0_0.atoi() !== $signed(llr_1[0]) || line_0_1.atoi() !== $signed(llr_1[1]) || line_0_2.atoi() !== $signed(llr_1[2]) || line_0_3.atoi() !== $signed(llr_1[3]) || 
+	// 		line_0_4.atoi() !== $signed(llr_1[4]) || line_0_5.atoi() !== $signed(llr_1[5]) || line_0_6.atoi() !== $signed(llr_1[6]) || line_0_7.atoi() !== $signed(llr_1[7]))
+	// 			$display ("error_llr1_0");
+	// 	end
+	// end
 
     endmodule
