@@ -27,6 +27,7 @@ module alpha
     valid_branch,
     init_branch1,
     init_branch2,
+    fsm_state,
     alpha_0,
     alpha_1,
     alpha_2,
@@ -43,6 +44,7 @@ module alpha
     input [15:0] init_branch1;
     input [15:0] init_branch2;
     input valid_branch;
+    input [1:0] fsm_state;
     output [15:0] alpha_0;
     output [15:0] alpha_1;
     output [15:0] alpha_2;
@@ -53,18 +55,27 @@ module alpha
     output [15:0] alpha_7;
     output valid_alpha;
 
-    reg [15:0] alpha_0_i [0:1] = {0, 0};
-    reg [15:0] alpha_1_i [0:1] = {-128, -128};
-    reg [15:0] alpha_2_i [0:1] = {-128, -128};
-    reg [15:0] alpha_3_i [0:1] = {-128, -128};
-    reg [15:0] alpha_4_i [0:1] = {-128, -128};
-    reg [15:0] alpha_5_i [0:1] = {-128, -128};
-    reg [15:0] alpha_6_i [0:1] = {-128, -128};
-    reg [15:0] alpha_7_i [0:1] = {-128, -128};
+    reg [15:0] alpha_0_i [0:1];
+    reg [15:0] alpha_1_i [0:1];
+    reg [15:0] alpha_2_i [0:1];
+    reg [15:0] alpha_3_i [0:1];
+    reg [15:0] alpha_4_i [0:1];
+    reg [15:0] alpha_5_i [0:1];
+    reg [15:0] alpha_6_i [0:1];
+    reg [15:0] alpha_7_i [0:1];
 
 
     always_ff @(posedge clk) begin
-        if (valid_branch) begin
+        if (rst || fsm_state == 2'b00) begin
+            alpha_0_i [0:1] <= {0, 0};
+            alpha_1_i [0:1] <= {-128, -128};
+            alpha_2_i [0:1] <= {-128, -128};
+            alpha_3_i [0:1] <= {-128, -128};
+            alpha_4_i [0:1] <= {-128, -128};
+            alpha_5_i [0:1] <= {-128, -128};
+            alpha_6_i [0:1] <= {-128, -128};
+            alpha_7_i [0:1] <= {-128, -128};
+        end else if (valid_branch) begin
             alpha_0_i[0] <= ($signed(alpha_0_i[1] + init_branch1) > $signed(alpha_1_i[1] - init_branch1)) ? alpha_0_i[1] + init_branch1 : alpha_1_i[1] - init_branch1; 
             alpha_1_i[0] <= ($signed(alpha_2_i[1] - init_branch2) > $signed(alpha_3_i[1] + init_branch2)) ? alpha_2_i[1] - init_branch2 : alpha_3_i[1] + init_branch2; 
             alpha_2_i[0] <= ($signed(alpha_4_i[1] + init_branch2) > $signed(alpha_5_i[1] - init_branch2)) ? alpha_4_i[1] + init_branch2 : alpha_5_i[1] - init_branch2;

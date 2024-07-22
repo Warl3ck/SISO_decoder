@@ -36,14 +36,14 @@ module top
 	// init_branch2_t,
 	// valid_out,
     // check alpha module
-    // alpha_0,
-    // alpha_1,
-    // alpha_2,
-    // alpha_3,
-    // alpha_4,
-    // alpha_5,
-    // alpha_6,
-    // alpha_7,
+    alpha_0,
+    alpha_1,
+    alpha_2,
+    alpha_3,
+    alpha_4,
+    alpha_5,
+    alpha_6,
+    alpha_7,
 	valid_extrinsic,
 	extrinsic
 );
@@ -60,14 +60,14 @@ module top
 	// output	[15:0]	init_branch1_t;
 	// output	[15:0]	init_branch2_t;
 	// output			valid_out;
-    // output [15:0] alpha_0;
-    // output [15:0] alpha_1;
-    // output [15:0] alpha_2;
-    // output [15:0] alpha_3;
-    // output [15:0] alpha_4;
-    // output [15:0] alpha_5;
-    // output [15:0] alpha_6;
-    // output [15:0] alpha_7;
+    output [15:0] alpha_0;
+    output [15:0] alpha_1;
+    output [15:0] alpha_2;
+    output [15:0] alpha_3;
+    output [15:0] alpha_4;
+    output [15:0] alpha_5;
+    output [15:0] alpha_6;
+    output [15:0] alpha_7;
 	output valid_extrinsic;
 	output [15:0] extrinsic;
 
@@ -78,6 +78,7 @@ module top
     wire valid_branch_i;
 	wire valid_alpha_i;
 	wire [15:0] alpha_0_i, alpha_1_i, alpha_2_i, alpha_3_i, alpha_4_i, alpha_5_i, alpha_6_i, alpha_7_i;
+    wire [1:0] fsm_state_i;
 
     sys_parity sys_parity_inst
     (
@@ -120,7 +121,8 @@ module top
         .alpha_5            (alpha_5_i),
         .alpha_6            (alpha_6_i),
         .alpha_7            (alpha_7_i),
-        .valid_alpha        (valid_alpha_i)
+        .valid_alpha        (valid_alpha_i),
+        .fsm_state          (fsm_state_i)
     );
 
     beta_llr beta_llr_inst 
@@ -145,10 +147,20 @@ module top
     	.alpha_7		    (alpha_7_i),
     	.valid_alpha	    (valid_alpha_i),
         //
+        .beta_0             (alpha_0),
+        .beta_1             (alpha_1),
+        .beta_2             (alpha_2),
+        .beta_3             (alpha_3),
+        .beta_4             (alpha_4),
+        .beta_5             (alpha_5),
+        .beta_6             (alpha_6),
+        .beta_7             (alpha_7),
+        //
         .valid_blklen   	(valid_blklen),
         .blklen         	(blklen),
 		.valid_extrinsic	(valid_extrinsic),
-		.extrinsic			(extrinsic)
+		.extrinsic			(extrinsic),
+        .fsm_state          ()
     );
 
 	// assign init_branch1_t = init_branch1;
