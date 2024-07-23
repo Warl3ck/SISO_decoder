@@ -39,6 +39,18 @@ module top_tb(
     bit [15:0] counter_i = 0;
 	wire ready_i;
 
+	reg [15:0] qwerty0 = 16'h7fff;
+	reg [15:0] qwerty1 = 100;
+	reg [15:0] sum, sum1;
+	shortint ch;
+
+	initial begin
+		assign sum = $signed(qwerty0 + qwerty1);
+		assign sum1 = $signed(qwerty0 - qwerty1);
+		assign ch = (16'h7fff < 16'h8000) ? 16'h7fff : 16'h8000;
+
+	end
+
 	integer int_i;
 
     integer init_branch1_512, init_branch2_512, init_branch1_6144, init_branch2_6144;
