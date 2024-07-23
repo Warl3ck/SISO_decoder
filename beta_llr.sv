@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module beta_llr #(
-		parameter blklen_w = 512,
+		parameter blklen_w = 6144,
 		parameter const1 = 0.75
 	)
     (
@@ -41,6 +41,7 @@ module beta_llr #(
         beta_5,
         beta_6,
         beta_7,
+		valid_beta,
         //
 		alpha_0,
     	alpha_1,
@@ -55,7 +56,8 @@ module beta_llr #(
         blklen,
 		valid_extrinsic,
 		extrinsic,
-		fsm_state
+		fsm_state,
+		ready
     );
 
     input clk;
@@ -87,9 +89,11 @@ module beta_llr #(
     output [15:0] beta_5;
     output [15:0] beta_6;
     output [15:0] beta_7;
+	output valid_beta;
 	output valid_extrinsic;
 	output [15:0] extrinsic;
 	output [1:0] fsm_state;
+	output ready;
 
     reg [15:0] init_branch_srl1 [0:blklen_w + 3];
     reg [15:0] init_branch_srl2 [0:blklen_w + 3];
@@ -108,14 +112,14 @@ module beta_llr #(
 
     reg [15:0] counter;
 
-	reg [15:0] beta_0_i [0:1]; // = {0, 0};
-    reg [15:0] beta_1_i [0:1]; // = {-128, -128};
-    reg [15:0] beta_2_i [0:1]; // = {-128, -128};
-    reg [15:0] beta_3_i [0:1]; // = {-128, -128};
-    reg [15:0] beta_4_i [0:1]; // = {-128, -128};
-    reg [15:0] beta_5_i [0:1]; // = {-128, -128};
-    reg [15:0] beta_6_i [0:1]; // = {-128, -128};
-    reg [15:0] beta_7_i [0:1]; // = {-128, -128};
+	reg [16:0] beta_0_i [0:1]; // = {0, 0};
+    reg [16:0] beta_1_i [0:1]; // = {-128, -128};
+    reg [16:0] beta_2_i [0:1]; // = {-128, -128};
+    reg [16:0] beta_3_i [0:1]; // = {-128, -128};
+    reg [16:0] beta_4_i [0:1]; // = {-128, -128};
+    reg [16:0] beta_5_i [0:1]; // = {-128, -128};
+    reg [16:0] beta_6_i [0:1]; // = {-128, -128};
+    reg [16:0] beta_7_i [0:1]; // = {-128, -128};
 	//
     reg [15:0] beta_reg_0; //[0:blklen_w + 4];
     reg [15:0] beta_reg_1; //[0:blklen_w + 4];
@@ -153,8 +157,8 @@ module beta_llr #(
 	reg [15:0] alpha_7_reg;
 	reg [15:0] alpha_7_reg_del [2];
 
-    reg [15:0] llr_1 [8];
-    reg [15:0] llr_2 [8];
+    reg [16:0] llr_1 [8];
+    reg [16:0] llr_2 [8];
 	reg [15:0] llr_1_reg [8];
     reg [15:0] llr_2_reg [8];
     reg [15:0] llr_1_max_0 [4];
@@ -172,8 +176,8 @@ module beta_llr #(
 	reg [0:3] valid_extrinsic_i;
     reg [15:0] extrinsic_i;
 
-
-	reg valid_llr;
+	reg ready_i;
+	// reg valid_llr;
 
 
     // FSM
@@ -222,8 +226,13 @@ module beta_llr #(
                                 beta_6_i[k] = -128;
                                 beta_7_i[k] = -128;
                             end
-                            // beta_0_i[0] = 0;
+							for (int i = 0; i < 8; i ++) begin
+								for (int j = 0; j < blklen_w + 3; j++) begin
+									alpha_i[i][j] <= {16{1'b0}};
+								end
+							end
 							valid_i <= 1'b0;
+							ready_i <= 1'b1;
 			end
 			CALCULATE_0		: begin
                                 if (valid_branch) begin
@@ -246,9 +255,9 @@ module beta_llr #(
                                     sys_srl <= {sys, sys_srl[0:blklen_w + 2]};
 			end
 			CALCULATE_1		: begin
-							counter_i <= counter_i + 1;
+							// counter_i <= counter_i + 1;
 							valid_i <= (!valid_i) ? 1'b1 : 1'b0; 
-
+							ready_i <= 1'b0;
 							if (valid_i) begin
 								beta_0_i[0] <= ($signed(beta_0_i[1] + init_branch1_inv) > $signed(beta_4_i[1] - init_branch1_inv)) ? beta_0_i[1] + init_branch1_inv : beta_4_i[1] - init_branch1_inv;		
                             	beta_1_i[0] <= ($signed(beta_4_i[1] + init_branch1_inv) > $signed(beta_0_i[1] - init_branch1_inv)) ? beta_4_i[1] + init_branch1_inv : beta_0_i[1] - init_branch1_inv; 
@@ -283,20 +292,20 @@ module beta_llr #(
     assign	beta_reg_6 = (state == CALCULATE_1 && valid_i) ? $signed(beta_6_i[1] - beta_0_i[0]) : beta_reg_6;
     assign	beta_reg_7 = (state == CALCULATE_1 && valid_i) ? $signed(beta_7_i[1] - beta_0_i[0]) : beta_reg_7;
 
-	assign init_branch1_inv = (state == CALCULATE_1) ? init_branch_srl1[(blklen_w + 5)-counter-1] : init_branch1_inv;
-	assign init_branch2_inv = (state == CALCULATE_1) ? init_branch_srl2[(blklen_w + 5)-counter-1] : init_branch1_inv;
+	assign init_branch1_inv = (state == CALCULATE_1) ? init_branch_srl1[(blklen + 5) - counter - 1] : init_branch1_inv;
+	assign init_branch2_inv = (state == CALCULATE_1) ? init_branch_srl2[(blklen + 5) - counter - 1] : init_branch1_inv;
 
-	assign sys_i = (state == CALCULATE_1) ? sys_srl[(blklen_w + 5)-counter-1] : sys_i;
-	assign apriori_i = (state == CALCULATE_1) ? apriori_srl[(blklen_w + 5)-counter-1] : apriori_i;
+	assign sys_i = (state == CALCULATE_1) ? sys_srl[(blklen + 5) - counter - 1] : sys_i;
+	assign apriori_i = (state == CALCULATE_1) ? apriori_srl[(blklen + 5) - counter - 1] : apriori_i;
 
-	assign alpha_0_reg = (state == CALCULATE_1) ? alpha_i[0][(blklen_w + 5)-counter-1] : alpha_0_reg;
-	assign alpha_1_reg = (state == CALCULATE_1) ? alpha_i[1][(blklen_w + 5)-counter-1] : alpha_1_reg;
-	assign alpha_2_reg = (state == CALCULATE_1) ? alpha_i[2][(blklen_w + 5)-counter-1] : alpha_2_reg;
-	assign alpha_3_reg = (state == CALCULATE_1) ? alpha_i[3][(blklen_w + 5)-counter-1] : alpha_3_reg;
-	assign alpha_4_reg = (state == CALCULATE_1) ? alpha_i[4][(blklen_w + 5)-counter-1] : alpha_4_reg;
-	assign alpha_5_reg = (state == CALCULATE_1) ? alpha_i[5][(blklen_w + 5)-counter-1] : alpha_5_reg;
-	assign alpha_6_reg = (state == CALCULATE_1) ? alpha_i[6][(blklen_w + 5)-counter-1] : alpha_6_reg;
-	assign alpha_7_reg = (state == CALCULATE_1) ? alpha_i[7][(blklen_w + 5)-counter-1] : alpha_7_reg;
+	assign alpha_0_reg = (state == CALCULATE_1) ? alpha_i[0][(blklen + 5) - counter - 1] : alpha_0_reg;
+	assign alpha_1_reg = (state == CALCULATE_1) ? alpha_i[1][(blklen + 5) - counter - 1] : alpha_1_reg;
+	assign alpha_2_reg = (state == CALCULATE_1) ? alpha_i[2][(blklen + 5) - counter - 1] : alpha_2_reg;
+	assign alpha_3_reg = (state == CALCULATE_1) ? alpha_i[3][(blklen + 5) - counter - 1] : alpha_3_reg;
+	assign alpha_4_reg = (state == CALCULATE_1) ? alpha_i[4][(blklen + 5) - counter - 1] : alpha_4_reg;
+	assign alpha_5_reg = (state == CALCULATE_1) ? alpha_i[5][(blklen + 5) - counter - 1] : alpha_5_reg;
+	assign alpha_6_reg = (state == CALCULATE_1) ? alpha_i[6][(blklen + 5) - counter - 1] : alpha_6_reg;
+	assign alpha_7_reg = (state == CALCULATE_1) ? alpha_i[7][(blklen + 5) - counter - 1] : alpha_7_reg;
 
 	always_ff @(posedge clk)
 	begin
@@ -338,7 +347,7 @@ module beta_llr #(
 
 	always_comb
 	begin
-		if (state == CALCULATE_1 && counter <= 515) begin
+		if (state == CALCULATE_1 && counter <= blklen + 3) begin
 			llr_1[0] = $signed(alpha_0_reg_del[1] - init_branch1_inv_del[1] + beta_reg_4_del);  // beta_reg - 1 because name [0:7]
 			llr_1[1] = $signed(alpha_1_reg_del[1] - init_branch1_inv_del[1] + beta_reg_0_del);
             llr_1[2] = $signed(alpha_2_reg_del[1] - init_branch2_inv_del[1] + beta_reg_1_del);
@@ -359,7 +368,7 @@ module beta_llr #(
 		end
 	end
 
-	assign valid_llr = (state == CALCULATE_1 && counter <= 515) ? valid_i : 1'b0;
+	assign valid_llr = (state == CALCULATE_1 && counter <= blklen + 3) ? valid_i : 1'b0;
 
 	always_ff @(posedge clk)
 	begin
@@ -385,7 +394,7 @@ module beta_llr #(
 
 	always_comb
 	begin
-		if (state == CALCULATE_1 && counter <= 515) begin                  				                            
+		if (state == CALCULATE_1 && counter <= blklen + 3) begin                  				                            
             llr_1_max_0[0] = ($signed(llr_1_reg[1]) > $signed(llr_1_reg[0])) ? llr_1_reg[1] : llr_1_reg[0];
 			llr_1_max_0[1] = ($signed(llr_1_reg[3]) > $signed(llr_1_reg[2])) ? llr_1_reg[3] : llr_1_reg[2];
 			llr_1_max_0[2] = ($signed(llr_1_reg[5]) > $signed(llr_1_reg[4])) ? llr_1_reg[5] : llr_1_reg[4];
@@ -411,7 +420,7 @@ module beta_llr #(
 
 	always_comb
 	begin
-		if (state == CALCULATE_1 && counter <= 514) begin  
+		if (state == CALCULATE_1 && counter <= blklen + 2) begin  
 			llr_1_max_1[0] = ($signed(llr_1_max_0_reg[1]) > $signed(llr_1_max_0_reg[0])) ? llr_1_max_0_reg[1] : llr_1_max_0_reg[0];
 			llr_1_max_1[1] = ($signed(llr_1_max_0_reg[3]) > $signed(llr_1_max_0_reg[2])) ? llr_1_max_0_reg[3] : llr_1_max_0_reg[2];
 			llr_2_max_1[0] = ($signed(llr_2_max_0_reg[1]) > $signed(llr_2_max_0_reg[0])) ? llr_2_max_0_reg[1] : llr_2_max_0_reg[0];
@@ -421,7 +430,7 @@ module beta_llr #(
 
 	always_comb
 	begin
-		if (state == CALCULATE_1 && counter <= 514) begin  
+		if (state == CALCULATE_1 && counter <= blklen + 2) begin  
         	llr_1_max_2 = ($signed(llr_1_max_1[0]) > $signed(llr_1_max_1[1])) ? llr_1_max_1[0] : llr_1_max_1[1];
         	llr_2_max_2 = ($signed(llr_2_max_1[0]) > $signed(llr_2_max_1[1])) ? llr_2_max_1[0] : llr_2_max_1[1];
         	llr_i = $signed(llr_1_max_2 - llr_2_max_2);
@@ -433,7 +442,7 @@ module beta_llr #(
 		if (rst) begin
 			for (int i = 0; i < 7; i++) begin
 				sys_i_srl[i] <= {16{1'b0}};
-				apriori_i[i] <= {16{1'b0}};
+				apriori_i_srl[i] <= {16{1'b0}};
 			end
 			valid_extrinsic_i <= {4{1'b0}};
 		end else begin
@@ -454,56 +463,67 @@ module beta_llr #(
 	assign valid_extrinsic = valid_extrinsic_i[3];
 
 	assign fsm_state = state;
+	assign ready = ready_i;
+
+	assign beta_0 = llr_1[0];//beta_reg_0;
+	assign beta_1 = llr_1[1];//beta_reg_1;
+	assign beta_2 = llr_1[2];//beta_reg_2;
+	assign beta_3 = beta_reg_3;
+	assign beta_4 = beta_reg_4;
+	assign beta_5 = beta_reg_5;
+	assign beta_6 = beta_reg_6;
+	assign beta_7 = beta_reg_7;	
+	assign valid_beta = valid_llr; //valid_i;
 
     // assign llr_sys_apriori_divide = (sub_llr_sys_apriori[1:0] == 1) ? (sub_llr_sys_apriori + 1) >> 2 : (sub_llr_sys_apriori[1:0] == 2) ? (sub_llr_sys_apriori + 2) >> 2 : 
 	//  (sub_llr_sys_apriori[1:0] == 3) ? (sub_llr_sys_apriori + 3) >> 2 : sub_llr_sys_apriori >> 2 ;
 	// assign extrinsic_i = $signed(sub_llr_sys_apriori_delay - extrinsic_i);
 
 
-    integer llr1_0, llr1_1, llr1_2, llr1_3, llr1_4, llr1_5, llr1_6, llr1_7, llr2_0, llr2_1, llr2_2, llr2_3, llr2_4, llr2_5, llr2_6, llr2_7;
-    integer bet0,bet1,bet2,bet3,bet4,bet5,bet6,bet7;
-	integer init_branch1_r, init_branch2_r;
-	integer sub_LLR, extrinsic0, LLR;
-	integer sys_f;
-	string line_sys;
-	string line_llr, line_ext, line_sub_llr;
-	string line_r1, line_r2;
-	string line_0_0, line_0_1, line_0_2, line_0_3, line_0_4, line_0_5, line_0_6, line_0_7;
-	reg [15:0] counter_i = 0;
+    // integer llr1_0, llr1_1, llr1_2, llr1_3, llr1_4, llr1_5, llr1_6, llr1_7, llr2_0, llr2_1, llr2_2, llr2_3, llr2_4, llr2_5, llr2_6, llr2_7;
+    // integer bet0,bet1,bet2,bet3,bet4,bet5,bet6,bet7;
+	// integer init_branch1_r, init_branch2_r;
+	// integer sub_LLR, extrinsic0, LLR;
+	// integer sys_f;
+	// string line_sys;
+	// string line_llr, line_ext, line_sub_llr;
+	// string line_r1, line_r2;
+	// string line_0_0, line_0_1, line_0_2, line_0_3, line_0_4, line_0_5, line_0_6, line_0_7;
+	// reg [15:0] counter_i = 0;
 
 
-	    initial begin
-		llr1_0 = $fopen("llrm_1_0.txt", "r");
-		llr1_1 = $fopen("llrm_1_1.txt", "r");
-		llr1_2 = $fopen("llrm_1_2.txt", "r");
-		llr1_3 = $fopen("llrm_1_3.txt", "r");
+	    // initial begin
+		// llr1_0 = $fopen("llrm_1_0.txt", "r");
+		// llr1_1 = $fopen("llrm_1_1.txt", "r");
+		// llr1_2 = $fopen("llrm_1_2.txt", "r");
+		// llr1_3 = $fopen("llrm_1_3.txt", "r");
 
-		llr1_4 = $fopen("llrm_1_4.txt", "r");
-		llr1_5 = $fopen("llrm_1_5.txt", "r");
-		llr1_6 = $fopen("llrm_1_6.txt", "r");
-		llr1_7 = $fopen("llrm_1_7.txt", "r");
+		// llr1_4 = $fopen("llrm_1_4.txt", "r");
+		// llr1_5 = $fopen("llrm_1_5.txt", "r");
+		// llr1_6 = $fopen("llrm_1_6.txt", "r");
+		// llr1_7 = $fopen("llrm_1_7.txt", "r");
 
-		llr2_0 = $fopen("llrm_2_0.txt", "r");
-		llr2_1 = $fopen("llrm_2_1.txt", "r");
-		llr2_2 = $fopen("llrm_2_2.txt", "r");
-		llr2_3 = $fopen("llrm_2_3.txt", "r");
+		// llr2_0 = $fopen("llrm_2_0.txt", "r");
+		// llr2_1 = $fopen("llrm_2_1.txt", "r");
+		// llr2_2 = $fopen("llrm_2_2.txt", "r");
+		// llr2_3 = $fopen("llrm_2_3.txt", "r");
 
-		llr2_4 = $fopen("llrm_2_4.txt", "r");
-		llr2_5 = $fopen("llrm_2_5.txt", "r");
-		llr2_6 = $fopen("llrm_2_6.txt", "r");
-		llr2_7 = $fopen("llrm_2_7.txt", "r");
+		// llr2_4 = $fopen("llrm_2_4.txt", "r");
+		// llr2_5 = $fopen("llrm_2_5.txt", "r");
+		// llr2_6 = $fopen("llrm_2_6.txt", "r");
+		// llr2_7 = $fopen("llrm_2_7.txt", "r");
 
 
-		bet0 = $fopen("beta_0.txt", "r");
-		bet1 = $fopen("beta_1.txt", "r");
-		bet2 = $fopen("beta_2.txt", "r");
-		bet3 = $fopen("beta_3.txt", "r");
-		bet4 = $fopen("beta_4.txt", "r");
-		bet5 = $fopen("beta_5.txt", "r");
-		bet6 = $fopen("beta_6.txt", "r");
-		bet7 = $fopen("beta_7.txt", "r");
+		// bet0 = $fopen("beta_0.txt", "r");
+		// bet1 = $fopen("beta_1.txt", "r");
+		// bet2 = $fopen("beta_2.txt", "r");
+		// bet3 = $fopen("beta_3.txt", "r");
+		// bet4 = $fopen("beta_4.txt", "r");
+		// bet5 = $fopen("beta_5.txt", "r");
+		// bet6 = $fopen("beta_6.txt", "r");
+		// bet7 = $fopen("beta_7.txt", "r");
 
-		end
+		// end
 
 // 	always_comb begin
 // 		if (valid_llr) begin

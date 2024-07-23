@@ -37,24 +37,38 @@ module top_tb(
     bit [15:0] extrinsic;
     bit valid_extrinsic;
     bit [15:0] counter_i = 0;
+	wire ready_i;
 
-	integer init_branch1i, init_branch2i;
-    integer init_branch1_r, init_branch2_r;
+	integer int_i;
 
+    integer init_branch1_512, init_branch2_512, init_branch1_6144, init_branch2_6144;
+	integer alpha1_6144, alpha2_6144, alpha3_6144;
+	integer beta1_6144, beta2_6144, beta3_6144;
+	integer qq1_6144, qq2_6144, qq3_6144;
     integer llr1_0, llr1_1, llr1_2, llr1_3, llr1_4, llr1_5, llr1_6, llr1_7, llr2_0, llr2_1, llr2_2, llr2_3, llr2_4, llr2_5, llr2_6, llr2_7;
-	integer init_branch1_r, init_branch2_r;
-	integer sub_LLR, extrinsic0, LLR;
+	integer sub_LLR, extrinsic_512, LLR, extrinsic_6144;
 	integer sys_f;
 	string line_sys;
 	string line_llr, line_ext, line_sub_llr;
-	string line_r1, line_r2;
+	string line, line_r1, line_r2, line_r3;
 	string line_0_0, line_0_1, line_0_2, line_0_3, line_0_4, line_0_5, line_0_6, line_0_7;
 
-	bit [15:0] init_branch1, init_branch2;
-	bit valid_out;
+	wire [15:0] init_branch1, init_branch2;
+	wire valid_branch;
+	wire [15:0] alpha_0_i, alpha_1_i, alpha_2_i, alpha_3_i, alpha_4_i, alpha_5_i, alpha_6_i, alpha_7_i;
+    wire valid_alpha_i;
+
+	wire [15:0] beta_0;
+    wire [15:0] beta_1;
+    wire [15:0] beta_2;
+    wire [15:0] beta_3;
+    wire [15:0] beta_4;
+    wire [15:0] beta_5;
+    wire [15:0] beta_6;
+    wire [15:0] beta_7;
+    wire valid_beta;
 
     integer in_f, apriori_f;
-    string line, line_r1, line_r2;
 
     event reset_complete;
 
@@ -62,16 +76,17 @@ module top_tb(
 	
     task write
     ( 
-		input string file
+		input integer num,
+		output integer num_out
 	);
-
-    case (file)
-        "512": begin
+	num_out = num;
+    case (num)
+        512: begin
 	        in_f = $fopen("in_512.txt", "r");	
             apriori_f = $fopen("apriori_512.txt", "r");
             blklen <= 512;
         end	
-        "6144": begin
+        6144: begin
             in_f = $fopen("in_6144.txt", "r");	
             apriori_f = $fopen("apriori_6144.txt", "r");
             blklen <= 6144;
@@ -83,7 +98,6 @@ module top_tb(
         valid_blklen <= 1'b1;
         #(CLK_PERIOD);
         valid_blklen <= 1'b0;
-
         while (!$feof(in_f)) begin
             @(posedge clk_i);
             valid <= 1'b1;
@@ -96,11 +110,31 @@ module top_tb(
             end
         end
         valid <= 1'b0;
-        valid_apriori <= 1'b0;
-
+        valid_apriori <= 1'b0;	
+		#15us;
 	endtask : write
 
     initial begin
+		init_branch1_512 = $fopen("init_branch1_512.txt", "r");
+		init_branch2_512 = $fopen("init_branch2_512.txt", "r");
+		init_branch1_6144 = $fopen("init_branch1_6144.txt", "r");
+		init_branch2_6144 = $fopen("init_branch2_6144.txt", "r");
+
+		extrinsic_6144 = $fopen("extrinsic_6144.txt", "r");
+		extrinsic_512 = $fopen("extrinsic.txt", "r");
+
+		alpha1_6144 = $fopen("alpha0u_6144.txt", "r");
+		alpha2_6144 = $fopen("alpha1u_6144.txt", "r");
+		alpha3_6144 = $fopen("alpha2u_6144.txt", "r");
+
+		beta1_6144 = $fopen("beta1_6144.txt", "r");
+		beta2_6144 = $fopen("beta2_6144.txt", "r");
+		beta3_6144 = $fopen("beta3_6144.txt", "r");
+	
+		qq1_6144 = $fopen("qq1_6144.txt", "r");
+		qq2_6144 = $fopen("qq2_6144.txt", "r");
+		qq3_6144 = $fopen("qq3_6144.txt", "r");
+		
 	// 	llr1_0 = $fopen("llrm_1_0.txt", "r");
 	// 	llr1_1 = $fopen("llrm_1_1.txt", "r");
 	// 	llr1_2 = $fopen("llrm_1_2.txt", "r");
@@ -122,16 +156,42 @@ module top_tb(
 	// 	llr2_7 = $fopen("llrm_2_7.txt", "r");
 
 		// sub_LLR = $fopen("sub_LLR.txt", "r");
-		extrinsic0 = $fopen("extrinsic.txt", "r");
 		// LLR = $fopen("LLR.txt", "r");
 		// sys_f = $fopen("sys.txt", "r");
     end
 
+	always_comb begin
+	if (valid_alpha_i) begin
+		counter_i = counter_i + 1;
+        $fgets(line_r1,alpha1_6144);
+        $fgets(line_r2,alpha2_6144);
+		$fgets(line_r3,alpha3_6144);
+		// $display(line_r1.atoi(), $signed(alpha_1_i), "|", line_r2.atoi(), $signed(alpha_2_i), "|", line_r3.atoi(), $signed(alpha_3_i));
+			$display(counter_i, /*line_r1.atoi(), $signed(alpha_1_i),"|",*/ line_r2.atoi(), $signed(alpha_1_i),"|", line_r3.atoi(), $signed(alpha_2_i));
+			// if (line_r1.atoi() !== $signed(alpha_1_i) || line_r2.atoi() !== $signed(alpha_2_i) || line_r3.atoi() !== $signed(alpha_3_i))
+			// 	$display ("error");
+		end
+	end
+
+	// always_comb begin
+	// if (valid_beta) begin
+	// 	counter_i = counter_i + 1;
+    //     $fgets(line_r1,qq1_6144);
+    //     $fgets(line_r2,qq2_6144);
+	// 	$fgets(line_r3,qq3_6144);
+	// 	// $display(line_r1.atoi(), $signed(alpha_1_i), "|", line_r2.atoi(), $signed(alpha_2_i), "|", line_r3.atoi(), $signed(alpha_3_i));
+	// 		$display(counter_i, line_r1.atoi(), $signed(beta_0),"|", line_r2.atoi(), $signed(beta_1),"|", line_r3.atoi(), $signed(beta_2));
+	// 		// if (line_r1.atoi() !== $signed(alpha_1_i) || line_r2.atoi() !== $signed(alpha_2_i) || line_r3.atoi() !== $signed(alpha_3_i))
+	// 		// 	$display ("error");
+	// 	end
+	// end
+
+
     
-	// always_ff @(posedge clk_i) begin
+	// always_comb begin
 	// if (valid_extrinsic) begin
 	// 	counter_i <= counter_i + 1;
-	// 	$fgets(line_ext,extrinsic0);
+	// 	$fgets(line_ext,extrinsic_6144);
 	// 	$display(counter_i, line_ext.atoi(), $signed(extrinsic));
     //     if (line_ext.atoi() !== $signed(extrinsic))
 	// 		$display ("error_sub_llr");
@@ -163,8 +223,8 @@ module top_tb(
 
 	// always_comb begin
 	// if (valid_branch) begin
-    //     $fgets(line_r1,init_branch1_r);
-    //     $fgets(line_r2,init_branch2_r);
+    //     $fgets(line_r1,init_branch1_6144);
+    //     $fgets(line_r2,init_branch2_6144);
 	// 	$display(line_r1.atoi(), $signed(init_branch1), "|", line_r2.atoi(), $signed(init_branch2));
     //     if (line_r1.atoi() !== $signed(init_branch1) || line_r2.atoi() !== $signed(init_branch2))
 	// 		$display ("error");
@@ -208,7 +268,9 @@ module top_tb(
     initial begin
         @(reset_complete);
         #20ns
-        write("512");
+        //write(512, .num_out (int_i));
+		
+		write(6144, .num_out (int_i));
     end
 
     always_ff @(posedge clk_i) begin
@@ -227,11 +289,30 @@ module top_tb(
         .blklen             (blklen),
         .valid_blklen       (valid_blklen),
         .extrinsic          (extrinsic),
-        .valid_extrinsic    (valid_extrinsic)
+        .valid_extrinsic    (valid_extrinsic),
+		.ready				(ready_i),
 		//
-		// .init_branch1_t (init_branch1),
-		// .init_branch2_t (init_branch2),
-		// .valid_out		(valid_out)
+		.init_branch1 		(init_branch1),
+		.init_branch2 		(init_branch2),
+		.valid_branch		(valid_branch),
+		.alpha_0		    (alpha_0_i),
+    	.alpha_1		    (alpha_1_i),
+    	.alpha_2		    (alpha_2_i),
+    	.alpha_3		    (alpha_3_i),
+    	.alpha_4		    (alpha_4_i),
+    	.alpha_5		    (alpha_5_i),
+    	.alpha_6		    (alpha_6_i),
+    	.alpha_7		    (alpha_7_i),
+    	.valid_alpha	    (valid_alpha_i),
+		.beta_0             (beta_0),
+        .beta_1             (beta_1),
+        .beta_2             (beta_2),
+        .beta_3             (beta_3),
+        .beta_4             (beta_4),
+        .beta_5             (beta_5),
+        .beta_6             (beta_6),
+        .beta_7             (beta_7),
+        .valid_beta         (valid_beta)
     );
 
 

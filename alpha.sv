@@ -55,8 +55,8 @@ module alpha
     output [15:0] alpha_7;
     output valid_alpha;
 
-    reg [15:0] alpha_0_i [0:1];
     reg [15:0] alpha_1_i [0:1];
+    reg [15:0] alpha_0_i [0:1]; 
     reg [15:0] alpha_2_i [0:1];
     reg [15:0] alpha_3_i [0:1];
     reg [15:0] alpha_4_i [0:1];
@@ -64,26 +64,40 @@ module alpha
     reg [15:0] alpha_6_i [0:1];
     reg [15:0] alpha_7_i [0:1];
 
+    reg [15:0] alpha_1_sub;
+    reg [15:0] alpha_0_sub; 
+    reg [15:0] alpha_2_sub;
+    reg [15:0] alpha_3_sub;
+    reg [15:0] alpha_4_sub;
+    reg [15:0] alpha_5_sub;
+    reg [15:0] alpha_6_sub;
+    reg [15:0] alpha_7_sub;
+
+    reg [15:0] counter_alpha = 0;
+
 
     always_ff @(posedge clk) begin
         if (rst || fsm_state == 2'b00) begin
-            alpha_0_i [0:1] <= {0, 0};
-            alpha_1_i [0:1] <= {-128, -128};
-            alpha_2_i [0:1] <= {-128, -128};
-            alpha_3_i [0:1] <= {-128, -128};
-            alpha_4_i [0:1] <= {-128, -128};
-            alpha_5_i [0:1] <= {-128, -128};
-            alpha_6_i [0:1] <= {-128, -128};
-            alpha_7_i [0:1] <= {-128, -128};
+            for (int i = 0; i < 2; i++) begin
+                alpha_0_i [i] <= 0;
+                alpha_1_i [i] <= -128;
+                alpha_2_i [i] <= -128;
+                alpha_3_i [i] <= -128;
+                alpha_4_i [i] <= -128;
+                alpha_5_i [i] <= -128;
+                alpha_6_i [i] <= -128;
+                alpha_7_i [i] <= -128;				
+			end
         end else if (valid_branch) begin
-            alpha_0_i[0] <= ($signed(alpha_0_i[1] + init_branch1) > $signed(alpha_1_i[1] - init_branch1)) ? alpha_0_i[1] + init_branch1 : alpha_1_i[1] - init_branch1; 
-            alpha_1_i[0] <= ($signed(alpha_2_i[1] - init_branch2) > $signed(alpha_3_i[1] + init_branch2)) ? alpha_2_i[1] - init_branch2 : alpha_3_i[1] + init_branch2; 
-            alpha_2_i[0] <= ($signed(alpha_4_i[1] + init_branch2) > $signed(alpha_5_i[1] - init_branch2)) ? alpha_4_i[1] + init_branch2 : alpha_5_i[1] - init_branch2;
-            alpha_3_i[0] <= ($signed(alpha_6_i[1] - init_branch1) > $signed(alpha_7_i[1] + init_branch1)) ? alpha_6_i[1] - init_branch1 : alpha_7_i[1] + init_branch1;
-            alpha_4_i[0] <= ($signed(alpha_0_i[1] - init_branch1) > $signed(alpha_1_i[1] + init_branch1)) ? alpha_0_i[1] - init_branch1 : alpha_1_i[1] + init_branch1;
-            alpha_5_i[0] <= ($signed(alpha_2_i[1] + init_branch2) > $signed(alpha_3_i[1] - init_branch2)) ? alpha_2_i[1] + init_branch2 : alpha_3_i[1] - init_branch2;
-            alpha_6_i[0] <= ($signed(alpha_4_i[1] - init_branch2) > $signed(alpha_5_i[1] + init_branch2)) ? alpha_4_i[1] - init_branch2 : alpha_5_i[1] + init_branch2;
-            alpha_7_i[0] <= ($signed(alpha_6_i[1] + init_branch1) > $signed(alpha_7_i[1] - init_branch1)) ? alpha_6_i[1] + init_branch1 : alpha_7_i[1] - init_branch1;
+            counter_alpha <= counter_alpha + 1;
+            alpha_0_i[0] <= ($signed(alpha_0_i[1] + init_branch1) > $signed(alpha_1_i[1] - init_branch1)) ? $signed(alpha_0_i[1] + init_branch1) : $signed(alpha_1_i[1] - init_branch1); 
+            alpha_1_i[0] <= ($signed(alpha_2_i[1] - init_branch2) > $signed(alpha_3_i[1] + init_branch2)) ? $signed(alpha_2_i[1] - init_branch2) : $signed(alpha_3_i[1] + init_branch2); 
+            alpha_2_i[0] <= ($signed(alpha_4_i[1] + init_branch2) > $signed(alpha_5_i[1] - init_branch2)) ? $signed(alpha_4_i[1] + init_branch2) : $signed(alpha_5_i[1] - init_branch2);
+            alpha_3_i[0] <= ($signed(alpha_6_i[1] - init_branch1) > $signed(alpha_7_i[1] + init_branch1)) ? $signed(alpha_6_i[1] - init_branch1) : $signed(alpha_7_i[1] + init_branch1);
+            alpha_4_i[0] <= ($signed(alpha_0_i[1] - init_branch1) > $signed(alpha_1_i[1] + init_branch1)) ? $signed(alpha_0_i[1] - init_branch1) : $signed(alpha_1_i[1] + init_branch1);
+            alpha_5_i[0] <= ($signed(alpha_2_i[1] + init_branch2) > $signed(alpha_3_i[1] - init_branch2)) ? $signed(alpha_2_i[1] + init_branch2) : $signed(alpha_3_i[1] - init_branch2);
+            alpha_6_i[0] <= ($signed(alpha_4_i[1] - init_branch2) > $signed(alpha_5_i[1] + init_branch2)) ? $signed(alpha_4_i[1] - init_branch2) : $signed(alpha_5_i[1] + init_branch2);
+            alpha_7_i[0] <= ($signed(alpha_6_i[1] + init_branch1) > $signed(alpha_7_i[1] - init_branch1)) ? $signed(alpha_6_i[1] + init_branch1) : $signed(alpha_7_i[1] - init_branch1);
         end else begin
             alpha_0_i[1] <= alpha_0_i[0];
             alpha_1_i[1] <= alpha_1_i[0];
@@ -96,14 +110,27 @@ module alpha
         end
     end
 
-    assign alpha_0 = $signed(alpha_0_i[1] - alpha_0_i[0]);
-    assign alpha_1 = $signed(alpha_1_i[1] - alpha_0_i[0]);
-    assign alpha_2 = $signed(alpha_2_i[1] - alpha_0_i[0]);
-    assign alpha_3 = $signed(alpha_3_i[1] - alpha_0_i[0]);
-    assign alpha_4 = $signed(alpha_4_i[1] - alpha_0_i[0]);
-    assign alpha_5 = $signed(alpha_5_i[1] - alpha_0_i[0]);
-    assign alpha_6 = $signed(alpha_6_i[1] - alpha_0_i[0]);
-    assign alpha_7 = $signed(alpha_7_i[1] - alpha_0_i[0]);
+    assign alpha_0_sub = $signed(alpha_0_i[1] - alpha_0_i[0]);
+    assign alpha_1_sub = $signed(alpha_1_i[1] - alpha_0_i[0]);
+    assign alpha_2_sub = $signed(alpha_2_i[1] - alpha_0_i[0]);
+    assign alpha_3_sub = $signed(alpha_3_i[1] - alpha_0_i[0]);
+    assign alpha_4_sub = $signed(alpha_4_i[1] - alpha_0_i[0]);
+    assign alpha_5_sub = $signed(alpha_5_i[1] - alpha_0_i[0]);
+    assign alpha_6_sub = $signed(alpha_6_i[1] - alpha_0_i[0]);
+    assign alpha_7_sub = $signed(alpha_7_i[1] - alpha_0_i[0]);
+
+    assign alpha_0 = alpha_0_i[1];
+    assign alpha_1 = alpha_1_i[1];
+    assign alpha_2 = alpha_2_i[1];
+    assign alpha_3 = alpha_3_i[1];
+    assign alpha_4 = alpha_4_i[1];
+    assign alpha_5 = alpha_5_i[1];
+    assign alpha_6 = alpha_6_i[1];
+    assign alpha_7 = alpha_7_i[1];
+
+
+
+
     assign valid_alpha = valid_branch;
 
 
