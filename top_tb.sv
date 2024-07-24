@@ -67,7 +67,7 @@ module top_tb(
 
 	wire [15:0] init_branch1, init_branch2;
 	wire valid_branch;
-	wire [18:0] alpha_0_i, alpha_1_i, alpha_2_i, alpha_3_i, alpha_4_i, alpha_5_i, alpha_6_i, alpha_7_i;
+	wire [15:0] alpha_0_i, alpha_1_i, alpha_2_i, alpha_3_i, alpha_4_i, alpha_5_i, alpha_6_i, alpha_7_i;
     wire valid_alpha_i;
 
 	wire [15:0] beta_0;
@@ -144,13 +144,13 @@ module top_tb(
 		// alpha6_6144 = $fopen("alpha6u_6144.txt", "r");
 		// alpha7_6144 = $fopen("alpha7u_6144.txt", "r");
 
-		// alpha1_6144 = $fopen("alpha1s_6144.txt", "r");
-		// alpha2_6144 = $fopen("alpha2s_6144.txt", "r");
-		// alpha3_6144 = $fopen("alpha3s_6144.txt", "r");
-		// alpha4_6144 = $fopen("alpha4s_6144.txt", "r");
-		// alpha5_6144 = $fopen("alpha5s_6144.txt", "r");
-		// alpha6_6144 = $fopen("alpha6s_6144.txt", "r");
-		// alpha7_6144 = $fopen("alpha7s_6144.txt", "r");
+		alpha1_6144 = $fopen("alpha1s_6144.txt", "r");
+		alpha2_6144 = $fopen("alpha2s_6144.txt", "r");
+		alpha3_6144 = $fopen("alpha3s_6144.txt", "r");
+		alpha4_6144 = $fopen("alpha4s_6144.txt", "r");
+		alpha5_6144 = $fopen("alpha5s_6144.txt", "r");
+		alpha6_6144 = $fopen("alpha6s_6144.txt", "r");
+		alpha7_6144 = $fopen("alpha7s_6144.txt", "r");
 
 		// beta1_6144 = $fopen("beta1_6144.txt", "r");
 		// beta2_6144 = $fopen("beta2_6144.txt", "r");

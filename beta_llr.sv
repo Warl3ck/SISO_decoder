@@ -69,14 +69,14 @@ module beta_llr #(
     input [15:0] init_branch1;
     input [15:0] init_branch2;
     input valid_branch;
-    input [18:0] alpha_0;
-    input [18:0] alpha_1;
-    input [18:0] alpha_2;
-    input [18:0] alpha_3;
-    input [18:0] alpha_4;
-    input [18:0] alpha_5;
-    input [18:0] alpha_6;
-    input [18:0] alpha_7;
+    input [15:0] alpha_0;
+    input [15:0] alpha_1;
+    input [15:0] alpha_2;
+    input [15:0] alpha_3;
+    input [15:0] alpha_4;
+    input [15:0] alpha_5;
+    input [15:0] alpha_6;
+    input [15:0] alpha_7;
     input valid_alpha;
     input [15:0] blklen;
     input valid_blklen;
@@ -493,15 +493,15 @@ module beta_llr #(
 
 
 	    initial begin
-		llr1_0 = $fopen("llrm_1_0.txt", "r");
-		llr1_1 = $fopen("llrm_1_1.txt", "r");
-		llr1_2 = $fopen("llrm_1_2.txt", "r");
-		llr1_3 = $fopen("llrm_1_3.txt", "r");
+		llr1_0 = $fopen("llrm_1_0_6144.txt", "r");
+		llr1_1 = $fopen("llrm_1_1_6144.txt", "r");
+		llr1_2 = $fopen("llrm_1_2_6144.txt", "r");
+		llr1_3 = $fopen("llrm_1_3_6144.txt", "r");
 
-		llr1_4 = $fopen("llrm_1_4.txt", "r");
-		llr1_5 = $fopen("llrm_1_5.txt", "r");
-		llr1_6 = $fopen("llrm_1_6.txt", "r");
-		llr1_7 = $fopen("llrm_1_7.txt", "r");
+		llr1_4 = $fopen("llrm_1_4_6144.txt", "r");
+		llr1_5 = $fopen("llrm_1_5_6144.txt", "r");
+		llr1_6 = $fopen("llrm_1_6_6144.txt", "r");
+		llr1_7 = $fopen("llrm_1_7_6144.txt", "r");
 
 		// llr2_0 = $fopen("llrm_2_0.txt", "r");
 		// llr2_1 = $fopen("llrm_2_1.txt", "r");
