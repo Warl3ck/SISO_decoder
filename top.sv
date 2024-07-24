@@ -70,14 +70,14 @@ module top
 	output	[15:0]	init_branch1;
 	output	[15:0]	init_branch2;
 	output			valid_branch;
-    output [15:0] alpha_0;
-    output [15:0] alpha_1;
-    output [15:0] alpha_2;
-    output [15:0] alpha_3;
-    output [15:0] alpha_4;
-    output [15:0] alpha_5;
-    output [15:0] alpha_6;
-    output [15:0] alpha_7;
+    output [18:0] alpha_0;
+    output [18:0] alpha_1;
+    output [18:0] alpha_2;
+    output [18:0] alpha_3;
+    output [18:0] alpha_4;
+    output [18:0] alpha_5;
+    output [18:0] alpha_6;
+    output [18:0] alpha_7;
     output valid_alpha;
     output [15:0] beta_0;
     output [15:0] beta_1;
@@ -98,7 +98,7 @@ module top
     wire [15:0] init_branch1_i, init_branch2_i;
     wire valid_branch_i;
 	wire valid_alpha_i;
-	wire [15:0] alpha_0_i, alpha_1_i, alpha_2_i, alpha_3_i, alpha_4_i, alpha_5_i, alpha_6_i, alpha_7_i;
+	wire [18:0] alpha_0_i, alpha_1_i, alpha_2_i, alpha_3_i, alpha_4_i, alpha_5_i, alpha_6_i, alpha_7_i;
     wire [1:0] fsm_state_i;
 
     sys_parity sys_parity_inst

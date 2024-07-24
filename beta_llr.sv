@@ -21,7 +21,7 @@
 
 module beta_llr #(
 		parameter blklen_w = 6144,
-		parameter const1 = 0.75
+		parameter const1 = 2//0.75
 	)
     (
         clk,
@@ -69,14 +69,14 @@ module beta_llr #(
     input [15:0] init_branch1;
     input [15:0] init_branch2;
     input valid_branch;
-    input [15:0] alpha_0;
-    input [15:0] alpha_1;
-    input [15:0] alpha_2;
-    input [15:0] alpha_3;
-    input [15:0] alpha_4;
-    input [15:0] alpha_5;
-    input [15:0] alpha_6;
-    input [15:0] alpha_7;
+    input [18:0] alpha_0;
+    input [18:0] alpha_1;
+    input [18:0] alpha_2;
+    input [18:0] alpha_3;
+    input [18:0] alpha_4;
+    input [18:0] alpha_5;
+    input [18:0] alpha_6;
+    input [18:0] alpha_7;
     input valid_alpha;
     input [15:0] blklen;
     input valid_blklen;
@@ -139,23 +139,23 @@ module beta_llr #(
     reg [15:0] beta_reg_6_del; //[0:blklen_w + 4];
     reg [15:0] beta_reg_7_del;
     //
-    reg [15:0] alpha_i [8][0:blklen_w + 3];
-	reg [15:0] alpha_0_reg;
-	reg [15:0] alpha_0_reg_del [2];
-	reg [15:0] alpha_1_reg;
-	reg [15:0] alpha_1_reg_del [2];
-	reg [15:0] alpha_2_reg;
-	reg [15:0] alpha_2_reg_del [2];
-	reg [15:0] alpha_3_reg;
-	reg [15:0] alpha_3_reg_del [2];
-	reg [15:0] alpha_4_reg;
-	reg [15:0] alpha_4_reg_del [2];
-	reg [15:0] alpha_5_reg;
-	reg [15:0] alpha_5_reg_del [2];
-	reg [15:0] alpha_6_reg;
-	reg [15:0] alpha_6_reg_del [2];
-	reg [15:0] alpha_7_reg;
-	reg [15:0] alpha_7_reg_del [2];
+    reg [18:0] alpha_i [8][0:blklen_w + 3];
+	reg [18:0] alpha_0_reg;
+	reg [18:0] alpha_0_reg_del [2];
+	reg [18:0] alpha_1_reg;
+	reg [18:0] alpha_1_reg_del [2];
+	reg [18:0] alpha_2_reg;
+	reg [18:0] alpha_2_reg_del [2];
+	reg [18:0] alpha_3_reg;
+	reg [18:0] alpha_3_reg_del [2];
+	reg [18:0] alpha_4_reg;
+	reg [18:0] alpha_4_reg_del [2];
+	reg [18:0] alpha_5_reg;
+	reg [18:0] alpha_5_reg_del [2];
+	reg [18:0] alpha_6_reg;
+	reg [18:0] alpha_6_reg_del [2];
+	reg [18:0] alpha_7_reg;
+	reg [18:0] alpha_7_reg_del [2];
 
     reg [16:0] llr_1 [8];
     reg [16:0] llr_2 [8];
@@ -480,28 +480,28 @@ module beta_llr #(
 	// assign extrinsic_i = $signed(sub_llr_sys_apriori_delay - extrinsic_i);
 
 
-    // integer llr1_0, llr1_1, llr1_2, llr1_3, llr1_4, llr1_5, llr1_6, llr1_7, llr2_0, llr2_1, llr2_2, llr2_3, llr2_4, llr2_5, llr2_6, llr2_7;
-    // integer bet0,bet1,bet2,bet3,bet4,bet5,bet6,bet7;
-	// integer init_branch1_r, init_branch2_r;
-	// integer sub_LLR, extrinsic0, LLR;
-	// integer sys_f;
-	// string line_sys;
-	// string line_llr, line_ext, line_sub_llr;
-	// string line_r1, line_r2;
-	// string line_0_0, line_0_1, line_0_2, line_0_3, line_0_4, line_0_5, line_0_6, line_0_7;
-	// reg [15:0] counter_i = 0;
+    integer llr1_0, llr1_1, llr1_2, llr1_3, llr1_4, llr1_5, llr1_6, llr1_7, llr2_0, llr2_1, llr2_2, llr2_3, llr2_4, llr2_5, llr2_6, llr2_7;
+    integer bet0,bet1,bet2,bet3,bet4,bet5,bet6,bet7;
+	integer init_branch1_r, init_branch2_r;
+	integer sub_LLR, extrinsic0, LLR;
+	integer sys_f;
+	string line_sys;
+	string line_llr, line_ext, line_sub_llr;
+	string line_r1, line_r2;
+	string line_0_0, line_0_1, line_0_2, line_0_3, line_0_4, line_0_5, line_0_6, line_0_7;
+	reg [15:0] counter_i = 0;
 
 
-	    // initial begin
-		// llr1_0 = $fopen("llrm_1_0.txt", "r");
-		// llr1_1 = $fopen("llrm_1_1.txt", "r");
-		// llr1_2 = $fopen("llrm_1_2.txt", "r");
-		// llr1_3 = $fopen("llrm_1_3.txt", "r");
+	    initial begin
+		llr1_0 = $fopen("llrm_1_0.txt", "r");
+		llr1_1 = $fopen("llrm_1_1.txt", "r");
+		llr1_2 = $fopen("llrm_1_2.txt", "r");
+		llr1_3 = $fopen("llrm_1_3.txt", "r");
 
-		// llr1_4 = $fopen("llrm_1_4.txt", "r");
-		// llr1_5 = $fopen("llrm_1_5.txt", "r");
-		// llr1_6 = $fopen("llrm_1_6.txt", "r");
-		// llr1_7 = $fopen("llrm_1_7.txt", "r");
+		llr1_4 = $fopen("llrm_1_4.txt", "r");
+		llr1_5 = $fopen("llrm_1_5.txt", "r");
+		llr1_6 = $fopen("llrm_1_6.txt", "r");
+		llr1_7 = $fopen("llrm_1_7.txt", "r");
 
 		// llr2_0 = $fopen("llrm_2_0.txt", "r");
 		// llr2_1 = $fopen("llrm_2_1.txt", "r");
@@ -523,27 +523,26 @@ module beta_llr #(
 		// bet6 = $fopen("beta_6.txt", "r");
 		// bet7 = $fopen("beta_7.txt", "r");
 
-		// end
+		end
 
-// 	always_comb begin
-// 		if (valid_llr) begin
-// 			$fgets(line_0_0, bet0);
-// 			$fgets(line_0_1, bet1);
-// 			$fgets(line_0_2, bet2);
-// 			$fgets(line_0_3, bet3);
-// 			$fgets(line_0_4, bet4);
-// 			$fgets(line_0_5, bet5);
-// 			$fgets(line_0_6, bet6);
-// 			$fgets(line_0_7, bet7);
+	always_comb begin
+		if (valid_llr) begin
+			$fgets(line_0_0, llr1_0);
+			$fgets(line_0_1, llr1_1);
+			$fgets(line_0_2, llr1_2);
+			$fgets(line_0_3, llr1_3);
+			$fgets(line_0_4, llr1_4);
+			$fgets(line_0_5, llr1_5);
+			$fgets(line_0_6, llr1_6);
+			$fgets(line_0_7, llr1_7);
 
-// $display(counter_i, line_0_0.atoi(), $signed(beta_reg_0), line_0_1.atoi(), $signed(beta_reg_1), line_0_2.atoi(), $signed(beta_reg_2), line_0_3.atoi(), $signed(beta_reg_3), 
-// 		line_0_4.atoi(), $signed(beta_reg_4), line_0_5.atoi(), $signed(beta_reg_5), line_0_6.atoi(), $signed(beta_reg_6), line_0_7.atoi(), $signed(beta_reg_7));
-// 			if (line_0_0.atoi() !== $signed(beta_reg_0) || line_0_1.atoi() !== $signed(beta_reg_1) || line_0_2.atoi() !== $signed(beta_reg_2) || line_0_3.atoi() !== $signed(beta_reg_3) || 
-// 			line_0_4.atoi() !== $signed(beta_reg_4) || line_0_5.atoi() !== $signed(beta_reg_5) || line_0_6.atoi() !== $signed(beta_reg_6) || line_0_7.atoi() !== $signed(beta_reg_7))
-// 				$display ("error_llr1_0");
-// 		end
-
-	// end
+$display(counter_i, line_0_0.atoi(), $signed(llr_1[0]), line_0_1.atoi(), $signed(llr_1[1]), line_0_2.atoi(), $signed(llr_1[2]), line_0_3.atoi(), $signed(llr_1[3]), 
+		line_0_4.atoi(), $signed(llr_1[4]), line_0_5.atoi(), $signed(llr_1[5]), line_0_6.atoi(), $signed(llr_1[6]), line_0_7.atoi(), $signed(llr_1[7]));
+			// if (line_0_0.atoi() !== $signed(beta_reg_0) || line_0_1.atoi() !== $signed(beta_reg_1) || line_0_2.atoi() !== $signed(beta_reg_2) || line_0_3.atoi() !== $signed(beta_reg_3) || 
+			// line_0_4.atoi() !== $signed(beta_reg_4) || line_0_5.atoi() !== $signed(beta_reg_5) || line_0_6.atoi() !== $signed(beta_reg_6) || line_0_7.atoi() !== $signed(beta_reg_7))
+			// 	$display ("error_llr1_0");
+		end
+	end
 
 
 
