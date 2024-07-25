@@ -39,23 +39,11 @@ module top_tb(
     bit [15:0] counter_i = 0;
 	wire ready_i;
 
-	reg [15:0] qwerty0 = 16'h7fff;
-	reg [15:0] qwerty1 = 100;
-	reg [15:0] sum, sum1;
-	shortint ch;
-
-	initial begin
-		assign sum = $signed(qwerty0 + qwerty1);
-		assign sum1 = $signed(qwerty0 - qwerty1);
-		assign ch = (16'h7fff < 16'h8000) ? 16'h7fff : 16'h8000;
-
-	end
-
 	integer int_i;
 
     integer init_branch1_512, init_branch2_512, init_branch1_6144, init_branch2_6144;
 	integer alpha0_6144, alpha1_6144, alpha2_6144, alpha3_6144, alpha4_6144, alpha5_6144, alpha6_6144, alpha7_6144;
-	integer beta1_6144, beta2_6144, beta3_6144;
+	integer beta0_6144, beta1_6144, beta2_6144, beta3_6144, beta4_6144, beta5_6144, beta6_6144, beta7_6144;
 	integer qq1_6144, qq2_6144, qq3_6144;
     integer llr1_0, llr1_1, llr1_2, llr1_3, llr1_4, llr1_5, llr1_6, llr1_7, llr2_0, llr2_1, llr2_2, llr2_3, llr2_4, llr2_5, llr2_6, llr2_7;
 	integer sub_LLR, extrinsic_512, LLR, extrinsic_6144;
@@ -127,8 +115,8 @@ module top_tb(
 	endtask : write
 
     initial begin
-		init_branch1_512 = $fopen("init_branch1_512.txt", "r");
-		init_branch2_512 = $fopen("init_branch2_512.txt", "r");
+		// init_branch1_512 = $fopen("init_branch1_512.txt", "r");
+		// init_branch2_512 = $fopen("init_branch2_512.txt", "r");
 		init_branch1_6144 = $fopen("init_branch1_6144.txt", "r");
 		init_branch2_6144 = $fopen("init_branch2_6144.txt", "r");
 
@@ -152,9 +140,15 @@ module top_tb(
 		alpha6_6144 = $fopen("alpha6s_6144.txt", "r");
 		alpha7_6144 = $fopen("alpha7s_6144.txt", "r");
 
-		// beta1_6144 = $fopen("beta1_6144.txt", "r");
-		// beta2_6144 = $fopen("beta2_6144.txt", "r");
-		// beta3_6144 = $fopen("beta3_6144.txt", "r");
+		beta0_6144 = $fopen("beta0_6144.txt", "r");
+		beta1_6144 = $fopen("beta1_6144.txt", "r");
+		beta2_6144 = $fopen("beta2_6144.txt", "r");
+		beta3_6144 = $fopen("beta3_6144.txt", "r");
+		beta4_6144 = $fopen("beta4_6144.txt", "r");
+		beta5_6144 = $fopen("beta5_6144.txt", "r");
+		beta6_6144 = $fopen("beta6_6144.txt", "r");
+		beta7_6144 = $fopen("beta7_6144.txt", "r");
+
 	
 		// qq1_6144 = $fopen("qq1_6144.txt", "r");
 		// qq2_6144 = $fopen("qq2_6144.txt", "r");
@@ -184,6 +178,27 @@ module top_tb(
 		// LLR = $fopen("LLR.txt", "r");
 		// sys_f = $fopen("sys.txt", "r");
     end
+
+	// always_comb begin
+	// if (valid_beta) begin
+	// 	counter_i = counter_i + 1;
+	//  	$fgets(line_r0,beta0_6144);
+    //     $fgets(line_r1,beta1_6144);
+    //     $fgets(line_r2,beta2_6144);
+	// 	$fgets(line_r3,beta3_6144);
+	// 	$fgets(line_r4,beta4_6144);
+    //     $fgets(line_r5,beta5_6144);
+	// 	$fgets(line_r6,beta6_6144);
+	// 	$fgets(line_r7,beta7_6144);
+	// 	// $display(line_r1.atoi(), $signed(alpha_1_i), "|", line_r2.atoi(), $signed(alpha_2_i), "|", line_r3.atoi(), $signed(alpha_3_i));
+	// 		$display(counter_i, line_r0.atoi(), $signed(beta_0), line_r1.atoi(), $signed(beta_1),"|", line_r2.atoi(), $signed(beta_2),"|", line_r3.atoi(), $signed(beta_3),
+	// 		"|", line_r4.atoi(), $signed(beta_4), "|", line_r5.atoi(), $signed(beta_5), "|", line_r6.atoi(), $signed(beta_6), "|", line_r7.atoi(), $signed(beta_7));
+	// 		if (line_r0.atoi() !== $signed(beta_0) || line_r1.atoi() !== $signed(beta_1) || line_r2.atoi() !== $signed(beta_2) || line_r3.atoi() !== $signed(beta_3)
+	// 		|| line_r4.atoi() !== $signed(beta_4) || line_r5.atoi() !== $signed(beta_5) || line_r6.atoi() !== $signed(beta_6) || line_r7.atoi() !== $signed(beta_7))
+	// 			$display ("error");
+	// 	end
+	// end
+
 
 	// always_comb begin
 	// if (valid_alpha_i) begin
@@ -220,15 +235,15 @@ module top_tb(
 
 
     
-	// always_comb begin
-	// if (valid_extrinsic) begin
-	// 	counter_i <= counter_i + 1;
-	// 	$fgets(line_ext,extrinsic_6144);
-	// 	$display(counter_i, line_ext.atoi(), $signed(extrinsic));
-    //     if (line_ext.atoi() !== $signed(extrinsic))
-	// 		$display ("error_sub_llr");
-	// end
-	// end
+	always_comb begin
+	if (valid_extrinsic) begin
+		counter_i <= counter_i + 1;
+		$fgets(line_ext,extrinsic_6144);
+		$display(counter_i, line_ext.atoi(), $signed(extrinsic));
+        if (line_ext.atoi() !== $signed(extrinsic))
+			$display ("error_sub_llr");
+	end
+	end
 
 // ********************************* DEBUG
 

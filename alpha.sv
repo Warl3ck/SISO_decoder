@@ -130,9 +130,6 @@ module alpha
 	assign alpha_6 = alpha_6_sub[15:0]; 
 	assign alpha_7 = alpha_7_sub[15:0]; 
 
-
-
-
     assign valid_alpha = valid_branch;
 
 
