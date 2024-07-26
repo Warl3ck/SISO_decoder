@@ -20,8 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module beta_llr #(
-		parameter blklen_w = 6144,
-		parameter const1 = 0.75
+		parameter blklen_w = 512
 	)
     (
         clk,
@@ -108,6 +107,10 @@ module beta_llr #(
 	reg [15:0] sys_i_srl [7];
 	reg [15:0] apriori_i_srl [7];
     reg [15:0] sub_llr_sys_apriori;
+	reg [15:0] sub_llr_sys_apriori_un;
+	reg [15:0] sub_llr_sys_apriori_round;
+	reg sub_llr_round;
+
 
     reg [15:0] counter;
 
@@ -169,10 +172,79 @@ module beta_llr #(
 	reg valid_i;
 	reg [0:4] valid_extrinsic_i;
     reg [15:0] extrinsic_i;
+	reg [15:0] llr_sys_apriori_predivide;
+	reg [15:0] llr_sys_apriori_divide;
+	reg signed [15:0] sub_extrinsic; 
 	reg [15:0] extrinsic_a;
 	reg valid_ex_a;
 
 	reg ready_i;
+
+
+    reg [18:0] sum_0; //[0:blklen_w + 4];
+    reg [18:0] sum_1; //[0:blklen_w + 4];
+    reg [18:0] sum_2; //[0:blklen_w + 4];
+    reg [18:0] sum_3; //[0:blklen_w + 4];
+    reg [18:0] sum_4; //[0:blklen_w + 4];
+    reg [18:0] sum_5; //[0:blklen_w + 4];
+    reg [18:0] sum_6; //[0:blklen_w + 4];
+    reg [18:0] sum_7; //[0:blklen_w + 4];
+
+	reg [18:0] sub_0; //[0:blklen_w + 4];
+    reg [18:0] sub_1; //[0:blklen_w + 4];
+    reg [18:0] sub_2; //[0:blklen_w + 4];
+    reg [18:0] sub_3; //[0:blklen_w + 4];
+    reg [18:0] sub_4; //[0:blklen_w + 4];
+    reg [18:0] sub_5; //[0:blklen_w + 4];
+    reg [18:0] sub_6; //[0:blklen_w + 4];
+    reg [18:0] sub_7; //[0:blklen_w + 4];
+
+	
+
+// module rams_sp_rom (clk, we, addr, di, dout);
+// input clk;
+// input we;
+// input [12:0] addr;
+// input [15:0] di;
+// output [15:0] dout;
+
+// reg [15:0] ram [blklen_w + 2:0];
+// reg [15:0] dout;
+
+// initial
+// begin
+// 	for (int k = 0; k < blklen_w + 3; k++) begin 
+//         ram[k] = 0;
+//     end
+// end
+
+// always @(posedge clk)
+// begin
+// if (we)
+// ram[addr] <= di;
+// dout <= ram[addr];
+// end
+
+// endmodule
+
+// rams_sp_rom rams_sp_rom_sys_inst
+// (
+// 	.clk	(clk),
+// 	.we		(valid_sys),
+// 	.addr	(counter),
+// 	.di		(sys),
+// 	.dout	(sys_i)
+// );
+
+// rams_sp_rom rams_sp_rom_apriori_inst
+// (
+// 	.clk	(clk),
+// 	.we		(valid_apriori),
+// 	.addr	(counter),
+// 	.di		(apriori),
+// 	.dout	(apriori_i)
+// );
+
 
 
 
@@ -256,7 +328,7 @@ module beta_llr #(
                                 sys_srl <= {sys, sys_srl[0:blklen_w + 2]};
 			end
 			CALCULATE_1		: begin
-							// counter_i <= counter_i + 1;
+
 							valid_i <= (!valid_i) ? 1'b1 : 1'b0; 
 							ready_i <= 1'b0;
 							if (valid_i) begin
@@ -271,14 +343,14 @@ module beta_llr #(
 								
 								counter <= (counter != 0) ? counter - 1 : counter;
 
-								beta_reg_0 <= beta_0_i[1] - beta_0_i[0]; 
-    							beta_reg_1 <= beta_1_i[1] - beta_0_i[0];
-    							beta_reg_2 <= beta_2_i[1] - beta_0_i[0];
-    							beta_reg_3 <= beta_3_i[1] - beta_0_i[0];
-    							beta_reg_4 <= beta_4_i[1] - beta_0_i[0];
-    							beta_reg_5 <= beta_5_i[1] - beta_0_i[0];
-    							beta_reg_6 <= beta_6_i[1] - beta_0_i[0];
-    							beta_reg_7 <= beta_7_i[1] - beta_0_i[0];
+								// beta_reg_0 <= beta_0_i[1] - beta_0_i[0]; 
+    							// beta_reg_1 <= beta_1_i[1] - beta_0_i[0];
+    							// beta_reg_2 <= beta_2_i[1] - beta_0_i[0];
+    							// beta_reg_3 <= beta_3_i[1] - beta_0_i[0];
+    							// beta_reg_4 <= beta_4_i[1] - beta_0_i[0];
+    							// beta_reg_5 <= beta_5_i[1] - beta_0_i[0];
+    							// beta_reg_6 <= beta_6_i[1] - beta_0_i[0];
+    							// beta_reg_7 <= beta_7_i[1] - beta_0_i[0];
 								
 							end	else begin
 								beta_0_i[1] <= beta_0_i[0];
@@ -310,22 +382,52 @@ module beta_llr #(
             				llr_2[7] <= $signed(alpha_7_reg_del[1] + init_branch1_inv_del[1] + beta_reg_3[15:0]);	
 
 
-							if (valid_extrinsic_i[4])
-									extrinsic_array <= {extrinsic_i, extrinsic_array[0:blklen_w + 2]};
+//							if (valid_extrinsic_i[4]) 
+//							// extrinsic_array <= (valid_extrinsic_i[4]) ? {extrinsic_i, extrinsic_array[0:blklen_w + 2]} : extrinsic_array;
+								extrinsic_array <= {extrinsic_i, extrinsic_array[0:blklen_w + 2]};
+//							else
+//								extrinsic_array	<= extrinsic_array;
+
+//							end
             end        
 			SAVE_ARRAY		: begin
 							valid_i <= 1'b0;
-							if (valid_extrinsic_i[2])
-									extrinsic_array <= {extrinsic_i, extrinsic_array[0:blklen_w + 2]};
+//							if (valid_extrinsic_i[2]) 
+//									extrinsic_array <= {extrinsic_i, extrinsic_array[0:blklen_w + 2]};
+//							else
+//							        extrinsic_array <= extrinsic_array;
+							extrinsic_array <= (valid_extrinsic_i[2]) ? {extrinsic_i, extrinsic_array[0:blklen_w + 2]} : extrinsic_array;
 
-							extrinsic_a <= extrinsic_array[blklen - counter];
-							valid_ex_a <= 1'b1;
+							if (counter > 3) begin
+								extrinsic_a <= extrinsic_array[blklen - counter + 7];
+								valid_ex_a <= 1'b1;
+							end
+
 							counter <= (counter != blklen + 4) ? counter + 1 : counter;
 
 			end            
 	        endcase
         end
 
+
+	assign	beta_reg_0 = (state == CALCULATE_1 && valid_i) ? (beta_0_i[1] - beta_0_i[0]) : beta_reg_0; 
+    assign	beta_reg_1 = (state == CALCULATE_1 && valid_i) ? (beta_1_i[1] - beta_0_i[0]) : beta_reg_1;
+    assign	beta_reg_2 = (state == CALCULATE_1 && valid_i) ? (beta_2_i[1] - beta_0_i[0]) : beta_reg_2;
+    assign	beta_reg_3 = (state == CALCULATE_1 && valid_i) ? (beta_3_i[1] - beta_0_i[0]) : beta_reg_3;
+    assign	beta_reg_4 = (state == CALCULATE_1 && valid_i) ? (beta_4_i[1] - beta_0_i[0]) : beta_reg_4;
+    assign	beta_reg_5 = (state == CALCULATE_1 && valid_i) ? (beta_5_i[1] - beta_0_i[0]) : beta_reg_5;
+    assign	beta_reg_6 = (state == CALCULATE_1 && valid_i) ? (beta_6_i[1] - beta_0_i[0]) : beta_reg_6;
+    assign	beta_reg_7 = (state == CALCULATE_1 && valid_i) ? (beta_7_i[1] - beta_0_i[0]) : beta_reg_7;
+
+
+	// assign beta_reg_0 = beta_0_i[1] - beta_0_i[0]; 
+    // assign beta_reg_1 = beta_1_i[1] - beta_0_i[0];
+    // assign beta_reg_2 = beta_2_i[1] - beta_0_i[0];
+    // assign beta_reg_3 = beta_3_i[1] - beta_0_i[0];
+    // assign beta_reg_4 = beta_4_i[1] - beta_0_i[0];
+    // assign beta_reg_5 = beta_5_i[1] - beta_0_i[0];
+    // assign beta_reg_6 = beta_6_i[1] - beta_0_i[0];
+    // assign beta_reg_7 = beta_7_i[1] - beta_0_i[0];
 
 
 	assign init_branch1_inv = (state == CALCULATE_1) ? init_branch_srl1[(blklen + 5) - counter - 1] : init_branch1_inv;
@@ -411,7 +513,7 @@ module beta_llr #(
 	begin
 		if (rst) begin
 			for (int i = 0; i < 7; i++) begin
-				sys_i_srl[i] <= {16{1'b0}};
+				// sys_i_srl[i] <= {16{1'b0}};
 				apriori_i_srl[i] <= {16{1'b0}};
 			end
 			valid_extrinsic_i <= {4{1'b0}};
@@ -426,80 +528,81 @@ module beta_llr #(
 
        
     assign sub_llr_sys_apriori = $signed(llr_i_reg - sys_i_srl[4] - apriori_i_srl[4]); 
-	assign extrinsic_i = const1 * $signed(sub_llr_sys_apriori);
+	assign sub_llr_sys_apriori_un = (sub_llr_sys_apriori[15]) ? (~sub_llr_sys_apriori + 1) : sub_llr_sys_apriori;
+	assign llr_sys_apriori_divide = sub_llr_sys_apriori_un >> 2;
+	assign llr_sys_apriori_predivide = llr_sys_apriori_divide << 2;
+
+	assign sub_llr_round = ((sub_llr_sys_apriori_un - llr_sys_apriori_predivide) == 3) ? 1'b1 : 1'b0;
+	assign sub_llr_sys_apriori_round = (sub_llr_round) ? llr_sys_apriori_divide + 1 : llr_sys_apriori_divide;
+	assign extrinsic_i = (sub_llr_sys_apriori[15]) ? sub_llr_sys_apriori - (- sub_llr_sys_apriori_round) : sub_llr_sys_apriori - sub_llr_sys_apriori_round;
+
     
-	
-	assign extrinsic = extrinsic_i;
-	assign valid_extrinsic = valid_extrinsic_i[4];
+	assign extrinsic = extrinsic_a; 
+	assign valid_extrinsic = valid_ex_a; 
 
 	assign fsm_state = state;
 	assign ready = ready_i;
 
-	assign beta_0 = beta_reg_0; //[15:0];
-	assign beta_1 = beta_reg_1; //[15:0];
-	assign beta_2 = beta_reg_2; //[15:0];
-	assign beta_3 = beta_reg_3; //[15:0];
-	assign beta_4 = beta_reg_4; //[15:0];
-	assign beta_5 = beta_reg_5; //[15:0];
-	assign beta_6 = beta_reg_6; //[15:0];
-	assign beta_7 = beta_reg_7; //[15:0];	
+	assign beta_0 = beta_reg_0;
+	assign beta_1 = beta_reg_1;
+	assign beta_2 = beta_reg_2;
+	assign beta_3 = beta_reg_3;
+	assign beta_4 = beta_reg_4;
+	assign beta_5 = beta_reg_5;
+	assign beta_6 = beta_reg_6;
+	assign beta_7 = beta_reg_7;	
 
 
-    // assign llr_sys_apriori_divide = (sub_llr_sys_apriori[1:0] == 1) ? (sub_llr_sys_apriori + 1) >> 2 : (sub_llr_sys_apriori[1:0] == 2) ? (sub_llr_sys_apriori + 2) >> 2 : 
-	//  (sub_llr_sys_apriori[1:0] == 3) ? (sub_llr_sys_apriori + 3) >> 2 : sub_llr_sys_apriori >> 2 ;
-	// assign extrinsic_i = $signed(sub_llr_sys_apriori_delay - extrinsic_i);
-
-
-    integer llr1_0, llr1_1, llr1_2, llr1_3, llr1_4, llr1_5, llr1_6, llr1_7, llr2_0, llr2_1, llr2_2, llr2_3, llr2_4, llr2_5, llr2_6, llr2_7;
-	integer llr_1_max_0i, llr_1_max_1i, llr_1_max_2i, llr_1_max_3i, llr_1_max_4i, llr_1_max_5i, llr_1_max_6i, llr_1_max_7i;
+    // integer llr1_0, llr1_1, llr1_2, llr1_3, llr1_4, llr1_5, llr1_6, llr1_7, llr2_0, llr2_1, llr2_2, llr2_3, llr2_4, llr2_5, llr2_6, llr2_7;
+	// integer llr_1_max_0i, llr_1_max_1i, llr_1_max_2i, llr_1_max_3i, llr_1_max_4i, llr_1_max_5i, llr_1_max_6i, llr_1_max_7i;
     // integer bet0,bet1,bet2,bet3,bet4,bet5,bet6,bet7;
-	string line_0_0, line_0_1, line_0_2, line_0_3, line_0_4, line_0_5, line_0_6, line_0_7;
-	reg [15:0] counter_i = 0;
-	reg valid_llr;
-	reg valid_llr_max_0;
+	// string line_0_0, line_0_1, line_0_2, line_0_3, line_0_4, line_0_5, line_0_6, line_0_7;
+	// reg [15:0] counter_i = 0;
+	// reg valid_llr;
+	// reg valid_llr_max_0;
 
-	assign valid_llr = (state == CALCULATE_1 && counter <= blklen + 3) ? valid_i : 1'b0;
-	assign valid_beta = valid_i;
+	// assign valid_llr = (state == CALCULATE_1 && counter <= blklen + 3) ? valid_i : 1'b0;
+	// assign valid_beta = valid_i;
 
-	always_ff @(posedge clk) begin
-		valid_llr_max_0 <= valid_llr;
-	end
-
-
+	// always_ff @(posedge clk) begin
+	// 	valid_llr_max_0 <= valid_llr;
+	// end
 
 
-	    initial begin
-		// qq1
-		llr1_0 = $fopen("llrm_1_0_6144.txt", "r");
-		llr1_1 = $fopen("llrm_1_1_6144.txt", "r");
-		llr1_2 = $fopen("llrm_1_2_6144.txt", "r");
-		llr1_3 = $fopen("llrm_1_3_6144.txt", "r");
 
-		llr1_4 = $fopen("llrm_1_4_6144.txt", "r");
-		llr1_5 = $fopen("llrm_1_5_6144.txt", "r");
-		llr1_6 = $fopen("llrm_1_6_6144.txt", "r");
-		llr1_7 = $fopen("llrm_1_7_6144.txt", "r");
 
-		// llr2_0 = $fopen("llrm_2_0.txt", "r");
-		// llr2_1 = $fopen("llrm_2_1.txt", "r");
-		// llr2_2 = $fopen("llrm_2_2.txt", "r");
-		// llr2_3 = $fopen("llrm_2_3.txt", "r");
+	    // initial begin
+		// // qq1
+		// llr1_0 = $fopen("llrm_1_0_6144.txt", "r");
+		// llr1_1 = $fopen("llrm_1_1_6144.txt", "r");
+		// llr1_2 = $fopen("llrm_1_2_6144.txt", "r");
+		// llr1_3 = $fopen("llrm_1_3_6144.txt", "r");
 
-		// llr2_4 = $fopen("llrm_2_4.txt", "r");
-		// llr2_5 = $fopen("llrm_2_5.txt", "r");
-		// llr2_6 = $fopen("llrm_2_6.txt", "r");
-		// llr2_7 = $fopen("llrm_2_7.txt", "r");
+		// llr1_4 = $fopen("llrm_1_4_6144.txt", "r");
+		// llr1_5 = $fopen("llrm_1_5_6144.txt", "r");
+		// llr1_6 = $fopen("llrm_1_6_6144.txt", "r");
+		// llr1_7 = $fopen("llrm_1_7_6144.txt", "r");
 
-		//q1
-		llr_1_max_0i = $fopen("llrm_1_max0_0_6144.txt", "r");
-		llr_1_max_1i = $fopen("llrm_1_max0_1_6144.txt", "r");
-		llr_1_max_2i = $fopen("llrm_1_max0_2_6144.txt", "r");
-		llr_1_max_3i = $fopen("llrm_1_max0_3_6144.txt", "r");
-		llr_1_max_4i = $fopen("llrm_1_max0_4_6144.txt", "r");
-		llr_1_max_5i = $fopen("llrm_1_max0_5_6144.txt", "r");
-		llr_1_max_6i = $fopen("llrm_1_max0_6_6144.txt", "r");
-		llr_1_max_7i = $fopen("llrm_1_max0_7_6144.txt", "r");
-		end
+		// // llr2_0 = $fopen("llrm_2_0.txt", "r");
+		// // llr2_1 = $fopen("llrm_2_1.txt", "r");
+		// // llr2_2 = $fopen("llrm_2_2.txt", "r");
+		// // llr2_3 = $fopen("llrm_2_3.txt", "r");
+
+		// // llr2_4 = $fopen("llrm_2_4.txt", "r");
+		// // llr2_5 = $fopen("llrm_2_5.txt", "r");
+		// // llr2_6 = $fopen("llrm_2_6.txt", "r");
+		// // llr2_7 = $fopen("llrm_2_7.txt", "r");
+
+		// //q1
+		// llr_1_max_0i = $fopen("llrm_1_max0_0_6144.txt", "r");
+		// llr_1_max_1i = $fopen("llrm_1_max0_1_6144.txt", "r");
+		// llr_1_max_2i = $fopen("llrm_1_max0_2_6144.txt", "r");
+		// llr_1_max_3i = $fopen("llrm_1_max0_3_6144.txt", "r");
+		// llr_1_max_4i = $fopen("llrm_1_max0_4_6144.txt", "r");
+		// llr_1_max_5i = $fopen("llrm_1_max0_5_6144.txt", "r");
+		// llr_1_max_6i = $fopen("llrm_1_max0_6_6144.txt", "r");
+		// llr_1_max_7i = $fopen("llrm_1_max0_7_6144.txt", "r");
+		// end
 
 // 	always_comb begin
 // 		if (valid_llr) begin

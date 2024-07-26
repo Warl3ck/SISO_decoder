@@ -235,7 +235,7 @@ module top_tb(
 
 
     
-	always_comb begin
+	always_ff @(posedge clk_i) begin
 	if (valid_extrinsic) begin
 		counter_i <= counter_i + 1;
 		$fgets(line_ext,extrinsic_6144);
