@@ -111,17 +111,35 @@ module top_tb(
         end
         valid <= 1'b0;
         valid_apriori <= 1'b0;	
-		#15us;
+		// #15us;
 	endtask : write
+
+	task check
+	( 
+		input integer check_file
+	);
+
+		@(posedge valid_extrinsic)
+		while (valid_extrinsic) begin
+			@(posedge clk_i)
+			counter_i = counter_i + 1;
+			$fgets(line_ext,check_file);
+			$display(counter_i, line_ext.atoi(), $signed(extrinsic));
+       		if (line_ext.atoi() !== $signed(extrinsic))
+				$display ("error_sub_llr");
+		end
+	endtask : check
+
+
 
     initial begin
 		// init_branch1_512 = $fopen("init_branch1_512.txt", "r");
 		// init_branch2_512 = $fopen("init_branch2_512.txt", "r");
-		init_branch1_6144 = $fopen("init_branch1_6144.txt", "r");
-		init_branch2_6144 = $fopen("init_branch2_6144.txt", "r");
+		// init_branch1_6144 = $fopen("init_branch1_6144.txt", "r");
+		// init_branch2_6144 = $fopen("init_branch2_6144.txt", "r");
 
 		extrinsic_6144 = $fopen("extrinsic_6144.txt", "r");
-		extrinsic_512 = $fopen("extrinsic.txt", "r");
+		extrinsic_512 = $fopen("extrinsic_512.txt", "r");
 
 		// alpha0_6144 = $fopen("alpha0u_6144.txt", "r");
 		// alpha1_6144 = $fopen("alpha1u_6144.txt", "r");
@@ -235,15 +253,17 @@ module top_tb(
 
 
     
-	always_ff @(posedge clk_i) begin
-	if (valid_extrinsic) begin
-		counter_i <= counter_i + 1;
-		$fgets(line_ext,extrinsic_6144);
-		$display(counter_i, line_ext.atoi(), $signed(extrinsic));
-        if (line_ext.atoi() !== $signed(extrinsic))
-			$display ("error_sub_llr");
-	end
-	end
+	// always_ff @(posedge clk_i) begin
+	// if (valid_extrinsic) begin
+	// 	counter_i <= counter_i + 1;
+	// 	$fgets(line_ext,extrinsic_512);
+	// 	$display(counter_i, line_ext.atoi(), $signed(extrinsic));
+    //     if (line_ext.atoi() !== $signed(extrinsic))
+	// 		$display ("error_sub_llr");
+	// end
+	// end
+
+
 
 // ********************************* DEBUG
 
@@ -315,9 +335,11 @@ module top_tb(
     initial begin
         @(reset_complete);
         #20ns
-        //write(512, .num_out (int_i));
+        write(512, .num_out(int_i));
+
+		check(.check_file(extrinsic_512));
 		
-		write(6144, .num_out (int_i));
+		// write(6144, .num_out (int_i));
     end
 
     always_ff @(posedge clk_i) begin

@@ -94,14 +94,14 @@ module beta_llr #(
 	output [1:0] fsm_state;
 	output ready;
 
-    reg [15:0] init_branch_srl1 [0:blklen_w + 3];
-    reg [15:0] init_branch_srl2 [0:blklen_w + 3];
+    (*rom_style = "block" *) reg [15:0] init_branch_srl1 [0:blklen_w + 3];
+    (*rom_style = "block" *) reg [15:0] init_branch_srl2 [0:blklen_w + 3];
 	reg signed [15:0] init_branch1_inv, init_branch2_inv;
-	reg [15:0] init_branch1_inv_del [2];
-	reg [15:0] init_branch2_inv_del [2];
+	reg signed[15:0] init_branch1_inv_del [2];
+	reg signed[15:0] init_branch2_inv_del [2];
 
-    reg [15:0] apriori_srl [0:blklen_w + 3];
-    reg [15:0] sys_srl [0:blklen_w + 3];
+    (*rom_style = "block" *) reg [15:0] apriori_srl [0:blklen_w + 3];
+    (*rom_style = "block" *) reg [15:0] sys_srl [0:blklen_w + 3];
 	reg [15:0] sys_i;
 	reg [15:0] apriori_i;
 	reg [15:0] sys_i_srl [7];
@@ -134,7 +134,7 @@ module beta_llr #(
     //
     reg [15:0] alpha_i [8][0:blklen_w + 3];
 	reg [15:0] alpha_0_reg;
-	reg [15:0] alpha_0_reg_del [2];
+	reg signed [15:0] alpha_0_reg_del [2];
 	reg [15:0] alpha_1_reg;
 	reg [15:0] alpha_1_reg_del [2];
 	reg [15:0] alpha_2_reg;
@@ -167,7 +167,7 @@ module beta_llr #(
     reg [15:0] llr_i;
 	reg [15:0] llr_i_reg;
 
-	reg  [15:0] extrinsic_array [6148];
+	(*rom_style = "block" *) reg  [15:0] extrinsic_array [blklen_w + 4];
 
 	reg valid_i;
 	reg [0:4] valid_extrinsic_i;
@@ -181,53 +181,29 @@ module beta_llr #(
 	reg ready_i;
 
 
-    reg [18:0] sum_0; //[0:blklen_w + 4];
-    reg [18:0] sum_1; //[0:blklen_w + 4];
-    reg [18:0] sum_2; //[0:blklen_w + 4];
-    reg [18:0] sum_3; //[0:blklen_w + 4];
-    reg [18:0] sum_4; //[0:blklen_w + 4];
-    reg [18:0] sum_5; //[0:blklen_w + 4];
-    reg [18:0] sum_6; //[0:blklen_w + 4];
-    reg [18:0] sum_7; //[0:blklen_w + 4];
+    // reg [18:0] sum_0; //[0:blklen_w + 4];
+    // reg [18:0] sum_1; //[0:blklen_w + 4];
+    // reg [18:0] sum_2; //[0:blklen_w + 4];
+    // reg [18:0] sum_3; //[0:blklen_w + 4];
+    // reg [18:0] sum_4; //[0:blklen_w + 4];
+    // reg [18:0] sum_5; //[0:blklen_w + 4];
+    // reg [18:0] sum_6; //[0:blklen_w + 4];
+    // reg [18:0] sum_7; //[0:blklen_w + 4];
 
-	reg [18:0] sub_0; //[0:blklen_w + 4];
-    reg [18:0] sub_1; //[0:blklen_w + 4];
-    reg [18:0] sub_2; //[0:blklen_w + 4];
-    reg [18:0] sub_3; //[0:blklen_w + 4];
-    reg [18:0] sub_4; //[0:blklen_w + 4];
-    reg [18:0] sub_5; //[0:blklen_w + 4];
-    reg [18:0] sub_6; //[0:blklen_w + 4];
-    reg [18:0] sub_7; //[0:blklen_w + 4];
+	// reg [18:0] sub_0; //[0:blklen_w + 4];
+    // reg [18:0] sub_1; //[0:blklen_w + 4];
+    // reg [18:0] sub_2; //[0:blklen_w + 4];
+    // reg [18:0] sub_3; //[0:blklen_w + 4];
+    // reg [18:0] sub_4; //[0:blklen_w + 4];
+    // reg [18:0] sub_5; //[0:blklen_w + 4];
+    // reg [18:0] sub_6; //[0:blklen_w + 4];
+    // reg [18:0] sub_7; //[0:blklen_w + 4];
 
 	
 
-// module rams_sp_rom (clk, we, addr, di, dout);
-// input clk;
-// input we;
-// input [12:0] addr;
-// input [15:0] di;
-// output [15:0] dout;
 
-// reg [15:0] ram [blklen_w + 2:0];
-// reg [15:0] dout;
 
-// initial
-// begin
-// 	for (int k = 0; k < blklen_w + 3; k++) begin 
-//         ram[k] = 0;
-//     end
-// end
-
-// always @(posedge clk)
-// begin
-// if (we)
-// ram[addr] <= di;
-// dout <= ram[addr];
-// end
-
-// endmodule
-
-// rams_sp_rom rams_sp_rom_sys_inst
+// ram ram_sys_inst
 // (
 // 	.clk	(clk),
 // 	.we		(valid_sys),
@@ -277,7 +253,7 @@ module beta_llr #(
 						else						    	next_state = CALCULATE_1;
 		end
 		SAVE_ARRAY 		: begin
-						if (counter == blklen)				next_state = IDLE;
+						if (counter == blklen + 7)			next_state = IDLE;
 						else						    	next_state = SAVE_ARRAY;
 		end
 		endcase
@@ -342,15 +318,6 @@ module beta_llr #(
                             	beta_7_i[0] <= ((beta_3_i[1] + init_branch1_inv) > (beta_7_i[1] - init_branch1_inv)) ? beta_3_i[1] + init_branch1_inv : beta_7_i[1] - init_branch1_inv;
 								
 								counter <= (counter != 0) ? counter - 1 : counter;
-
-								// beta_reg_0 <= beta_0_i[1] - beta_0_i[0]; 
-    							// beta_reg_1 <= beta_1_i[1] - beta_0_i[0];
-    							// beta_reg_2 <= beta_2_i[1] - beta_0_i[0];
-    							// beta_reg_3 <= beta_3_i[1] - beta_0_i[0];
-    							// beta_reg_4 <= beta_4_i[1] - beta_0_i[0];
-    							// beta_reg_5 <= beta_5_i[1] - beta_0_i[0];
-    							// beta_reg_6 <= beta_6_i[1] - beta_0_i[0];
-    							// beta_reg_7 <= beta_7_i[1] - beta_0_i[0];
 								
 							end	else begin
 								beta_0_i[1] <= beta_0_i[0];
@@ -363,71 +330,65 @@ module beta_llr #(
             					beta_7_i[1] <= beta_7_i[0];
 							end	
 
-							llr_1[0] <= $signed(alpha_0_reg_del[1] - init_branch1_inv_del[1] + beta_reg_4[15:0]);  
-							llr_1[1] <= $signed(alpha_1_reg_del[1] - init_branch1_inv_del[1] + beta_reg_0[15:0]);
-            				llr_1[2] <= $signed(alpha_2_reg_del[1] - init_branch2_inv_del[1] + beta_reg_1[15:0]);
-            				llr_1[3] <= $signed(alpha_3_reg_del[1] - init_branch2_inv_del[1] + beta_reg_5[15:0]);
-            				llr_1[4] <= $signed(alpha_4_reg_del[1] - init_branch2_inv_del[1] + beta_reg_6[15:0]);
-            				llr_1[5] <= $signed(alpha_5_reg_del[1] - init_branch2_inv_del[1] + beta_reg_2[15:0]);
-            				llr_1[6] <= $signed(alpha_6_reg_del[1] - init_branch1_inv_del[1] + beta_reg_3[15:0]);
-            				llr_1[7] <= $signed(alpha_7_reg_del[1] - init_branch1_inv_del[1] + beta_reg_7[15:0]);
+							llr_1[0] <= alpha_0_reg_del[1] - init_branch1_inv_del[1] + beta_reg_4[15:0];  
+							llr_1[1] <= alpha_1_reg_del[1] - init_branch1_inv_del[1] + beta_reg_0[15:0];
+            				llr_1[2] <= alpha_2_reg_del[1] - init_branch2_inv_del[1] + beta_reg_1[15:0];
+            				llr_1[3] <= alpha_3_reg_del[1] - init_branch2_inv_del[1] + beta_reg_5[15:0];
+            				llr_1[4] <= alpha_4_reg_del[1] - init_branch2_inv_del[1] + beta_reg_6[15:0];
+            				llr_1[5] <= alpha_5_reg_del[1] - init_branch2_inv_del[1] + beta_reg_2[15:0];
+            				llr_1[6] <= alpha_6_reg_del[1] - init_branch1_inv_del[1] + beta_reg_3[15:0];
+            				llr_1[7] <= alpha_7_reg_del[1] - init_branch1_inv_del[1] + beta_reg_7[15:0];
             				///////////////////////////////
-            				llr_2[0] <= $signed(alpha_0_reg_del[1] + init_branch1_inv_del[1] + beta_reg_0[15:0]); 
-            				llr_2[1] <= $signed(alpha_1_reg_del[1] + init_branch1_inv_del[1] + beta_reg_4[15:0]);
-            				llr_2[2] <= $signed(alpha_2_reg_del[1] + init_branch2_inv_del[1] + beta_reg_5[15:0]);
-            				llr_2[3] <= $signed(alpha_3_reg_del[1] + init_branch2_inv_del[1] + beta_reg_1[15:0]);
-            				llr_2[4] <= $signed(alpha_4_reg_del[1] + init_branch2_inv_del[1] + beta_reg_2[15:0]);
-            				llr_2[5] <= $signed(alpha_5_reg_del[1] + init_branch2_inv_del[1] + beta_reg_6[15:0]);
-            				llr_2[6] <= $signed(alpha_6_reg_del[1] + init_branch1_inv_del[1] + beta_reg_7[15:0]);
-            				llr_2[7] <= $signed(alpha_7_reg_del[1] + init_branch1_inv_del[1] + beta_reg_3[15:0]);	
+            				llr_2[0] <= alpha_0_reg_del[1] + init_branch1_inv_del[1] + beta_reg_0[15:0]; 
+            				llr_2[1] <= alpha_1_reg_del[1] + init_branch1_inv_del[1] + beta_reg_4[15:0];
+            				llr_2[2] <= alpha_2_reg_del[1] + init_branch2_inv_del[1] + beta_reg_5[15:0];
+            				llr_2[3] <= alpha_3_reg_del[1] + init_branch2_inv_del[1] + beta_reg_1[15:0];
+            				llr_2[4] <= alpha_4_reg_del[1] + init_branch2_inv_del[1] + beta_reg_2[15:0];
+            				llr_2[5] <= alpha_5_reg_del[1] + init_branch2_inv_del[1] + beta_reg_6[15:0];
+            				llr_2[6] <= alpha_6_reg_del[1] + init_branch1_inv_del[1] + beta_reg_7[15:0];
+            				llr_2[7] <= alpha_7_reg_del[1] + init_branch1_inv_del[1] + beta_reg_3[15:0];	
 
 
-//							if (valid_extrinsic_i[4]) 
-//							// extrinsic_array <= (valid_extrinsic_i[4]) ? {extrinsic_i, extrinsic_array[0:blklen_w + 2]} : extrinsic_array;
+							if (valid_extrinsic_i[4])
 								extrinsic_array <= {extrinsic_i, extrinsic_array[0:blklen_w + 2]};
-//							else
-//								extrinsic_array	<= extrinsic_array;
+
 
 //							end
             end        
 			SAVE_ARRAY		: begin
 							valid_i <= 1'b0;
-//							if (valid_extrinsic_i[2]) 
-//									extrinsic_array <= {extrinsic_i, extrinsic_array[0:blklen_w + 2]};
-//							else
-//							        extrinsic_array <= extrinsic_array;
+
 							extrinsic_array <= (valid_extrinsic_i[2]) ? {extrinsic_i, extrinsic_array[0:blklen_w + 2]} : extrinsic_array;
 
 							if (counter > 3) begin
-								extrinsic_a <= extrinsic_array[blklen - counter + 7];
+								extrinsic_a <= extrinsic_array[counter - 4];
 								valid_ex_a <= 1'b1;
 							end
 
-							counter <= (counter != blklen + 4) ? counter + 1 : counter;
+							counter <= (counter != blklen + 7) ? counter + 1 : counter;
 
 			end            
 	        endcase
         end
 
+	// assign	beta_reg_0 = (state == CALCULATE_1 && valid_i) ? (beta_0_i[1] - beta_0_i[0]) : beta_reg_0; 
+    // assign	beta_reg_1 = (state == CALCULATE_1 && valid_i) ? (beta_1_i[1] - beta_0_i[0]) : beta_reg_1;
+    // assign	beta_reg_2 = (state == CALCULATE_1 && valid_i) ? (beta_2_i[1] - beta_0_i[0]) : beta_reg_2;
+    // assign	beta_reg_3 = (state == CALCULATE_1 && valid_i) ? (beta_3_i[1] - beta_0_i[0]) : beta_reg_3;
+    // assign	beta_reg_4 = (state == CALCULATE_1 && valid_i) ? (beta_4_i[1] - beta_0_i[0]) : beta_reg_4;
+    // assign	beta_reg_5 = (state == CALCULATE_1 && valid_i) ? (beta_5_i[1] - beta_0_i[0]) : beta_reg_5;
+    // assign	beta_reg_6 = (state == CALCULATE_1 && valid_i) ? (beta_6_i[1] - beta_0_i[0]) : beta_reg_6;
+    // assign	beta_reg_7 = (state == CALCULATE_1 && valid_i) ? (beta_7_i[1] - beta_0_i[0]) : beta_reg_7;
 
-	assign	beta_reg_0 = (state == CALCULATE_1 && valid_i) ? (beta_0_i[1] - beta_0_i[0]) : beta_reg_0; 
-    assign	beta_reg_1 = (state == CALCULATE_1 && valid_i) ? (beta_1_i[1] - beta_0_i[0]) : beta_reg_1;
-    assign	beta_reg_2 = (state == CALCULATE_1 && valid_i) ? (beta_2_i[1] - beta_0_i[0]) : beta_reg_2;
-    assign	beta_reg_3 = (state == CALCULATE_1 && valid_i) ? (beta_3_i[1] - beta_0_i[0]) : beta_reg_3;
-    assign	beta_reg_4 = (state == CALCULATE_1 && valid_i) ? (beta_4_i[1] - beta_0_i[0]) : beta_reg_4;
-    assign	beta_reg_5 = (state == CALCULATE_1 && valid_i) ? (beta_5_i[1] - beta_0_i[0]) : beta_reg_5;
-    assign	beta_reg_6 = (state == CALCULATE_1 && valid_i) ? (beta_6_i[1] - beta_0_i[0]) : beta_reg_6;
-    assign	beta_reg_7 = (state == CALCULATE_1 && valid_i) ? (beta_7_i[1] - beta_0_i[0]) : beta_reg_7;
 
-
-	// assign beta_reg_0 = beta_0_i[1] - beta_0_i[0]; 
-    // assign beta_reg_1 = beta_1_i[1] - beta_0_i[0];
-    // assign beta_reg_2 = beta_2_i[1] - beta_0_i[0];
-    // assign beta_reg_3 = beta_3_i[1] - beta_0_i[0];
-    // assign beta_reg_4 = beta_4_i[1] - beta_0_i[0];
-    // assign beta_reg_5 = beta_5_i[1] - beta_0_i[0];
-    // assign beta_reg_6 = beta_6_i[1] - beta_0_i[0];
-    // assign beta_reg_7 = beta_7_i[1] - beta_0_i[0];
+	assign beta_reg_0 = beta_0_i[1] - beta_0_i[0]; 
+    assign beta_reg_1 = beta_1_i[1] - beta_0_i[0];
+    assign beta_reg_2 = beta_2_i[1] - beta_0_i[0];
+    assign beta_reg_3 = beta_3_i[1] - beta_0_i[0];
+    assign beta_reg_4 = beta_4_i[1] - beta_0_i[0];
+    assign beta_reg_5 = beta_5_i[1] - beta_0_i[0];
+    assign beta_reg_6 = beta_6_i[1] - beta_0_i[0];
+    assign beta_reg_7 = beta_7_i[1] - beta_0_i[0];
 
 
 	assign init_branch1_inv = (state == CALCULATE_1) ? init_branch_srl1[(blklen + 5) - counter - 1] : init_branch1_inv;
@@ -513,7 +474,7 @@ module beta_llr #(
 	begin
 		if (rst) begin
 			for (int i = 0; i < 7; i++) begin
-				// sys_i_srl[i] <= {16{1'b0}};
+				sys_i_srl[i] <= {16{1'b0}};
 				apriori_i_srl[i] <= {16{1'b0}};
 			end
 			valid_extrinsic_i <= {4{1'b0}};
