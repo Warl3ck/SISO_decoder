@@ -40,9 +40,9 @@ end
 
 always @(posedge clk)
 begin
-if (we)
-ram[addr] <= di;
-dout <= ram[addr];
+    if (we)
+        ram[addr] <= di;
+        dout <= ram[addr];
 end
 
 endmodule

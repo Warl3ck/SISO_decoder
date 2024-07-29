@@ -36,7 +36,7 @@ module top_tb(
     bit valid_blklen;
     bit [15:0] extrinsic;
     bit valid_extrinsic;
-    bit [15:0] counter_i = 0;
+    bit [15:0] counter_i;
 	wire ready_i;
 
 	integer int_i;
@@ -120,8 +120,9 @@ module top_tb(
 	);
 
 		@(posedge valid_extrinsic)
+		counter_i = 0;
 		while (valid_extrinsic) begin
-			@(posedge clk_i)
+			@(posedge clk_i)// && negedge valid_extrinsic)
 			counter_i = counter_i + 1;
 			$fgets(line_ext,check_file);
 			$display(counter_i, line_ext.atoi(), $signed(extrinsic));
@@ -339,7 +340,9 @@ module top_tb(
 
 		check(.check_file(extrinsic_512));
 		
-		// write(6144, .num_out (int_i));
+		write(6144, .num_out (int_i));
+
+		check(.check_file(extrinsic_6144));
     end
 
     always_ff @(posedge clk_i) begin
@@ -359,29 +362,29 @@ module top_tb(
         .valid_blklen       (valid_blklen),
         .extrinsic          (extrinsic),
         .valid_extrinsic    (valid_extrinsic),
-		.ready				(ready_i),
+		.ready				(ready_i)
 		//
-		.init_branch1 		(init_branch1),
-		.init_branch2 		(init_branch2),
-		.valid_branch		(valid_branch),
-		.alpha_0		    (alpha_0_i),
-    	.alpha_1		    (alpha_1_i),
-    	.alpha_2		    (alpha_2_i),
-    	.alpha_3		    (alpha_3_i),
-    	.alpha_4		    (alpha_4_i),
-    	.alpha_5		    (alpha_5_i),
-    	.alpha_6		    (alpha_6_i),
-    	.alpha_7		    (alpha_7_i),
-    	.valid_alpha	    (valid_alpha_i),
-		.beta_0             (beta_0),
-        .beta_1             (beta_1),
-        .beta_2             (beta_2),
-        .beta_3             (beta_3),
-        .beta_4             (beta_4),
-        .beta_5             (beta_5),
-        .beta_6             (beta_6),
-        .beta_7             (beta_7),
-        .valid_beta         (valid_beta)
+		// .init_branch1 		(init_branch1),
+		// .init_branch2 		(init_branch2),
+		// .valid_branch		(valid_branch),
+		// .alpha_0		    (alpha_0_i),
+    	// .alpha_1		    (alpha_1_i),
+    	// .alpha_2		    (alpha_2_i),
+    	// .alpha_3		    (alpha_3_i),
+    	// .alpha_4		    (alpha_4_i),
+    	// .alpha_5		    (alpha_5_i),
+    	// .alpha_6		    (alpha_6_i),
+    	// .alpha_7		    (alpha_7_i),
+    	// .valid_alpha	    (valid_alpha_i),
+		// .beta_0             (beta_0),
+        // .beta_1             (beta_1),
+        // .beta_2             (beta_2),
+        // .beta_3             (beta_3),
+        // .beta_4             (beta_4),
+        // .beta_5             (beta_5),
+        // .beta_6             (beta_6),
+        // .beta_7             (beta_7),
+        // .valid_beta         (valid_beta)
     );
 
 
