@@ -20,7 +20,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 module beta_llr #(
-		parameter blklen_w = 512
+		parameter blklen_w = 6144
 	)
     (
         clk,
@@ -45,8 +45,7 @@ module beta_llr #(
         blklen,
 		valid_extrinsic,
 		extrinsic,
-		fsm_state,
-		ready
+		fsm_state
     );
 
     input clk;
@@ -72,20 +71,23 @@ module beta_llr #(
 	output valid_extrinsic;
 	output [15:0] extrinsic;
 	output [1:0] fsm_state;
-	output ready;
 
 	reg [15:0] sys_i;
 	reg [15:0] apriori_i;
-    reg signed [15:0] sub_llr_sys_apriori;
-	    reg signed [15:0] sub_llr_sys_apriori_i [2];
+    reg signed [15:0] sub_llr_sys_apriori [2];
 	reg [15:0] sub_llr_sys_apriori_un;
-	reg [15:0] sub_llr_sys_apriori_un_i;
 	reg [15:0] sub_llr_sys_apriori_round;
-	reg [15:0] sub_llr_sys_apriori_round_i;
 	reg sub_llr_round;
-		reg sub_llr_round_i;
-
     reg [15:0] counter;
+
+	reg [15:0] alpha_0_reg;
+	reg [15:0] alpha_1_reg;
+	reg [15:0] alpha_2_reg;
+	reg [15:0] alpha_3_reg;
+	reg [15:0] alpha_4_reg;
+	reg [15:0] alpha_5_reg;
+	reg [15:0] alpha_6_reg;
+	reg [15:0] alpha_7_reg;
 
 	reg signed [18:0] beta_0_i [0:1];
     reg signed [18:0] beta_1_i [0:1];
@@ -105,16 +107,6 @@ module beta_llr #(
     reg [18:0] beta_reg_6;
     reg [18:0] beta_reg_7;
     //
-    (*rom_style = "block" *) reg [15:0] alpha_i [8][0:blklen_w + 3];
-	reg [15:0] alpha_0_reg;
-	reg [15:0] alpha_1_reg;
-	reg [15:0] alpha_2_reg;
-	reg [15:0] alpha_3_reg;
-	reg [15:0] alpha_4_reg;
-	reg [15:0] alpha_5_reg;
-	reg [15:0] alpha_6_reg;
-	reg [15:0] alpha_7_reg;
-
     reg [15:0] sub_alpha_init_branch1 [8];
 	reg [15:0] sub_alpha_init_branch2 [8];
 
@@ -133,23 +125,21 @@ module beta_llr #(
     reg signed [15:0] llr_i;
 	reg signed [15:0] llr_i_reg;
 
-	(*rom_style = "block" *) reg  [15:0] extrinsic_array [blklen_w + 4];
+	reg [3:0] valid_branch_i;
+	reg [12:0] counter_init_branch_i [3:0];
+	reg [15:0] alpha_i [7:0];
+	reg [15:0] alpha_reg [7:0];
+	reg [3:0] enable;
+
+	reg  [15:0] extrinsic_array [blklen_w + 4];
 
 	reg valid_i;
 	reg [0:7] valid_extrinsic_i;
     reg [15:0] extrinsic_i;
-	    reg [15:0] extrinsic_z;
 	reg [15:0] llr_sys_apriori_predivide;
 	reg [15:0] llr_sys_apriori_divide;
-		reg [15:0] llr_sys_apriori_predivide_i;
-		reg [15:0] llr_sys_apriori_divide_i;
 	reg [15:0] extrinsic_a;
 	reg valid_ex_a;
-
-	reg ready_i;
-	reg we_extrinsic_ram;
-	reg [15:0] counter_ram;
-	reg [15:0] ram_dout;
 
 	wire signed [15:0] init_branch1_dout;
 	wire signed [15:0] init_branch2_dout;
@@ -206,58 +196,24 @@ module beta_llr #(
                                 beta_6_i[k] = -128;
                                 beta_7_i[k] = -128;
                             end
-							for (int i = 0; i < 8; i ++) begin
-								for (int j = 0; j < blklen_w + 3; j++) begin
-									alpha_i[i][j] <= {16{1'b0}};
-								end
-							end
+
 							for (int i = 0; i < 8; i++) begin
 								sub_alpha_init_branch1[i] <= {16{1'b0}};
 								sub_alpha_init_branch2[i] <= {16{1'b0}};
 							end
 
-							alpha_0_reg <= {16{1'b0}};
-							alpha_1_reg <= {16{1'b0}};
-							alpha_2_reg <= {16{1'b0}};
-							alpha_3_reg <= {16{1'b0}};
-							alpha_4_reg <= {16{1'b0}};
-							alpha_5_reg <= {16{1'b0}};
-							alpha_6_reg <= {16{1'b0}};
-							alpha_7_reg <= {16{1'b0}};
-
 							valid_i <= 1'b0;
-							ready_i <= 1'b1;
 							extrinsic_a <= {16{1'b0}};
 							valid_ex_a <= 1'b0;
 			end
 			CALCULATE_0		: begin
                             if (valid_branch) begin
-								counter <= counter + 1;
-                                init_branch_srl1 <= {init_branch1, init_branch_srl1[0:blklen_w + 2]};
-                                init_branch_srl2 <= {init_branch2, init_branch_srl2[0:blklen_w + 2]};
-		                        alpha_i[0] <= {alpha_0, alpha_i[0][0:blklen_w + 2]};
-                                alpha_i[1] <= {alpha_1, alpha_i[1][0:blklen_w + 2]};
-		                        alpha_i[2] <= {alpha_2, alpha_i[2][0:blklen_w + 2]};
-		                        alpha_i[3] <= {alpha_3, alpha_i[3][0:blklen_w + 2]};
-		                        alpha_i[4] <= {alpha_4, alpha_i[4][0:blklen_w + 2]};
-		                        alpha_i[5] <= {alpha_5, alpha_i[5][0:blklen_w + 2]};
-		                        alpha_i[6] <= {alpha_6, alpha_i[6][0:blklen_w + 2]};
-		                        alpha_i[7] <= {alpha_7, alpha_i[7][0:blklen_w + 2]};      
+								counter <= counter + 1;    
                             end
 			end
 			CALCULATE_1		: begin
 
 							valid_i <= (!valid_i) ? 1'b1 : 1'b0; 
-							ready_i <= 1'b0;
-
-	 						alpha_0_reg <= alpha_i[0][(blklen + 5) - counter - 1];
-	 						alpha_1_reg <= alpha_i[1][(blklen + 5) - counter - 1];
-	 						alpha_2_reg <= alpha_i[2][(blklen + 5) - counter - 1];
-	 						alpha_3_reg <= alpha_i[3][(blklen + 5) - counter - 1];
-	 						alpha_4_reg <= alpha_i[4][(blklen + 5) - counter - 1];
-	 						alpha_5_reg <= alpha_i[5][(blklen + 5) - counter - 1];
-	 						alpha_6_reg <= alpha_i[6][(blklen + 5) - counter - 1];
-	 						alpha_7_reg <= alpha_i[7][(blklen + 5) - counter - 1];
 
 							if (valid_i) begin
 								beta_0_i[0] <= ((beta_0_i[1] + init_branch1_dout) > (beta_4_i[1] - init_branch1_dout)) ? beta_0_i[1] + init_branch1_dout : beta_4_i[1] - init_branch1_dout;		
@@ -268,7 +224,7 @@ module beta_llr #(
                             	beta_5_i[0] <= ((beta_6_i[1] + init_branch2_dout) > (beta_2_i[1] - init_branch2_dout)) ? beta_6_i[1] + init_branch2_dout : beta_2_i[1] - init_branch2_dout;
                             	beta_6_i[0] <= ((beta_7_i[1] + init_branch1_dout) > (beta_3_i[1] - init_branch1_dout)) ? beta_7_i[1] + init_branch1_dout : beta_3_i[1] - init_branch1_dout;
                             	beta_7_i[0] <= ((beta_3_i[1] + init_branch1_dout) > (beta_7_i[1] - init_branch1_dout)) ? beta_3_i[1] + init_branch1_dout : beta_7_i[1] - init_branch1_dout;
-								counter <= (counter != 0) ? counter - 1 : counter;
+								counter <= counter - 1;
 							end	else begin
 								beta_0_i[1] <= beta_0_i[0];
             					beta_1_i[1] <= beta_1_i[0];
@@ -394,6 +350,69 @@ module beta_llr #(
 		end
 	end
 
+	assign valid_branch_i = {valid_branch, valid_branch, valid_branch, valid_branch};
+
+	assign counter_init_branch_i[0] = counter_init_branch[12:0]; 
+	assign counter_init_branch_i[1] = counter_init_branch[12:0]; 
+	assign counter_init_branch_i[2] = counter_init_branch[12:0]; 
+	assign counter_init_branch_i[3] = counter_init_branch[12:0]; 
+
+	assign alpha_i[0] = alpha_0;
+	assign alpha_i[1] = alpha_1;
+	assign alpha_i[2] = alpha_2;
+	assign alpha_i[3] = alpha_3;
+	assign alpha_i[4] = alpha_4;
+	assign alpha_i[5] = alpha_5;
+	assign alpha_i[6] = alpha_6;
+	assign alpha_i[7] = alpha_7;
+
+	assign alpha_0_reg = alpha_reg[0];
+	assign alpha_1_reg = alpha_reg[1];
+	assign alpha_2_reg = alpha_reg[2];
+	assign alpha_3_reg = alpha_reg[3];
+	assign alpha_4_reg = alpha_reg[4];
+	assign alpha_5_reg = alpha_reg[5];
+	assign alpha_6_reg = alpha_reg[6];
+	assign alpha_7_reg = alpha_reg[7];
+
+	assign enable = {1'b1, 1'b1, 1'b1, 1'b1};
+
+	assign counter_init_branch = (state == CALCULATE_1) ? counter - 1 : counter;
+
+	always_ff @(posedge clk)
+	begin
+		if (rst) begin
+			for (int i = 0; i < 2; i++) begin
+				sub_llr_sys_apriori[i] <= {16{1'b0}};
+			end
+		end else begin
+			sub_llr_sys_apriori[0] <= llr_i_reg - sys_i - apriori_i; 
+			sub_llr_sys_apriori[1] <= sub_llr_sys_apriori[0];
+		end
+	end
+
+	assign sub_llr_sys_apriori_un = (sub_llr_sys_apriori[0][15]) ? (~sub_llr_sys_apriori[0] + 1) : sub_llr_sys_apriori[0];
+	assign llr_sys_apriori_divide = sub_llr_sys_apriori_un >> 2;
+	assign llr_sys_apriori_predivide = llr_sys_apriori_divide << 2;
+	assign sub_llr_round = ((sub_llr_sys_apriori_un - llr_sys_apriori_predivide) == 3) ? 1'b1 : 1'b0;
+
+
+	always_ff @(posedge clk)
+	begin
+		if (rst)
+			sub_llr_sys_apriori_round <= {16{1'b0}};
+		else
+			sub_llr_sys_apriori_round <= (sub_llr_round) ? llr_sys_apriori_divide + 1 : llr_sys_apriori_divide;
+	end 
+
+	always_ff @(posedge clk)
+	begin
+		if (sub_llr_sys_apriori[1][15])
+			extrinsic_i <= sub_llr_sys_apriori[1] - (- sub_llr_sys_apriori_round);
+		else
+			extrinsic_i <= sub_llr_sys_apriori[1] - sub_llr_sys_apriori_round;
+	end
+
 	ram ram_sys_inst
 	(
 		.clk	(clk),
@@ -411,7 +430,6 @@ module beta_llr #(
 		.di		(apriori),
 		.dout	(apriori_i)
 	);
-
 
 	ram ram_init_branch1_inst
 	(
@@ -431,56 +449,42 @@ module beta_llr #(
 		.dout	(init_branch2_dout)
 	);
 
-	assign counter_init_branch = (state == CALCULATE_1) ? counter - 1 : counter;
+ 	ram_3d  #(.NUM_RAMS(4), .A_WID(13), .D_WID(16))
+	ram_3d_inst0
+	(
+		.clk	(clk),
+		.we		(valid_branch_i),
+		.ena	(enable),
+		.addr	(counter_init_branch_i),
+		.din 	(alpha_i[3:0]),
+		.dout	(alpha_reg[3:0])
+	);
 
-	// assign we_extrinsic_ram = (state == CALCULATE_1) ? (valid_extrinsic_i[4]) : (state == SAVE_ARRAY) ? valid_extrinsic_i[2] : 1'b0;
-	// assign counter_ram = (state == CALCULATE_1) ? counter + 2: (state == SAVE_ARRAY) ? counter : 1'b0;
+	ram_3d  #(.NUM_RAMS(4), .A_WID(13), .D_WID(16))
+	ram_3d_inst1
+	(
+		.clk	(clk),
+		.we		(valid_branch_i),
+		.ena	(enable),
+		.addr	(counter_init_branch_i),
+		.din 	(alpha_i[7:4]),
+		.dout	(alpha_reg[7:4])
+	);
+
+	// assign we_extrinsic_ram = (state == CALCULATE_1) ? (valid_extrinsic_i[7]) : (state == SAVE_ARRAY) ? valid_extrinsic_i[5] : 1'b0;
 
 	// ram extrinsic_array_inst
 	// (
 	// 	.clk	(clk),
 	// 	.we		(we_extrinsic_ram),
-	// 	.addr	(counter_ram),
+	// 	.addr	(counter),
 	// 	.di		(extrinsic_i),
 	// 	.dout	(ram_dout)
 	// );
 
-    // assign sub_llr_sys_apriori = llr_i_reg - sys_i - apriori_i;
-	// assign sub_llr_sys_apriori_un = (sub_llr_sys_apriori[15]) ? (~sub_llr_sys_apriori + 1) : sub_llr_sys_apriori;
-	// assign sub_llr_sys_apriori_un = (sub_llr_sys_apriori[15]) ? (~sub_llr_sys_apriori + 1) : sub_llr_sys_apriori;
-	// assign llr_sys_apriori_divide = sub_llr_sys_apriori_un >> 2;
-	// assign llr_sys_apriori_predivide = llr_sys_apriori_divide << 2;
-	// assign sub_llr_round = ((sub_llr_sys_apriori_un - llr_sys_apriori_predivide) == 3) ? 1'b1 : 1'b0;
-	// assign sub_llr_sys_apriori_round = (sub_llr_round) ? llr_sys_apriori_divide + 1 : llr_sys_apriori_divide;
-	// assign extrinsic_i = (sub_llr_sys_apriori[15]) ? sub_llr_sys_apriori - (- sub_llr_sys_apriori_round) : sub_llr_sys_apriori - sub_llr_sys_apriori_round;
-
-
-	always_ff @(posedge clk)
-	begin
-		sub_llr_sys_apriori_i[0] <= llr_i_reg - sys_i - apriori_i; 
-		sub_llr_sys_apriori_i[1] <= sub_llr_sys_apriori_i[0];
-	end
-
-	assign sub_llr_sys_apriori_un_i = (sub_llr_sys_apriori_i[0][15]) ? (~sub_llr_sys_apriori_i[0] + 1) : sub_llr_sys_apriori_i[0];
-	assign llr_sys_apriori_divide_i = sub_llr_sys_apriori_un_i >> 2;
-	assign llr_sys_apriori_predivide_i = llr_sys_apriori_divide_i << 2;
-	assign sub_llr_round_i = ((sub_llr_sys_apriori_un_i - llr_sys_apriori_predivide_i) == 3) ? 1'b1 : 1'b0;
-
-
-	always_ff @(posedge clk)
-	begin
-		sub_llr_sys_apriori_round_i <= (sub_llr_round_i) ? llr_sys_apriori_divide_i + 1 : llr_sys_apriori_divide_i;
-	end 
-
-	always_ff @(posedge clk)
-	begin
-		extrinsic_i <= (sub_llr_sys_apriori_i[1][15]) ? sub_llr_sys_apriori_i[1] - (- sub_llr_sys_apriori_round_i) : sub_llr_sys_apriori_i[1] - sub_llr_sys_apriori_round_i;
-	end
-    
 	assign extrinsic = extrinsic_a; 
 	assign valid_extrinsic = valid_ex_a; 
 
 	assign fsm_state = state;
-	assign ready = ready_i;
 
     endmodule

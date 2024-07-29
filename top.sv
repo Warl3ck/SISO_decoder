@@ -31,57 +31,20 @@ module top
     apriori,
     blklen,
     valid_blklen,
-	// check init_branch module
-	// init_branch1,
-	// init_branch2,
-	// valid_branch,
-    // check alpha module
-    // alpha_0,
-    // alpha_1,
-    // alpha_2,
-    // alpha_3,
-    // alpha_4,
-    // alpha_5,
-    // alpha_6,
-    // alpha_7,
-    // beta_0,
-    // beta_1,
-    // beta_2,
-    // beta_3,
-    // beta_4,
-    // beta_5,
-    // beta_6,
-    // beta_7,
-    // valid_beta,
-    // valid_alpha,
 	valid_extrinsic,
 	extrinsic,
-    ready
 );
 
-    input           clk;  
-    input           rst; 
-    input   [15:0]  in;
-    input           valid_in;
-    input           valid_apriori;
-    input   [15:0]  blklen;
-    input           valid_blklen;
-    input   [15:0]  apriori;
-	// output	[15:0]	init_branch1;
-	// output	[15:0]	init_branch2;
-	// output			valid_branch;
-    // output [15:0] alpha_0;
-    // output [15:0] alpha_1;
-    // output [15:0] alpha_2;
-    // output [15:0] alpha_3;
-    // output [15:0] alpha_4;
-    // output [15:0] alpha_5;
-    // output [15:0] alpha_6;
-    // output [15:0] alpha_7;
-    // output valid_alpha;
+    input clk;
+    input rst;
+    input [15:0] in;
+    input valid_in;
+    input valid_apriori;
+    input [15:0]  blklen;
+    input valid_blklen;
+    input [15:0] apriori;
 	output valid_extrinsic;
 	output [15:0] extrinsic;
-    output ready;
 
     wire [15:0] sys;
     wire [15:0] parity;
@@ -116,7 +79,6 @@ module top
         .init_branch2       (init_branch2_i),
         .valid_branch       (valid_branch_i)
     );
-
 
     alpha alpha_inst
     (
@@ -162,22 +124,7 @@ module top
         .blklen         	(blklen),
 		.valid_extrinsic	(valid_extrinsic),
 		.extrinsic			(extrinsic),
-        .fsm_state          (fsm_state_i),
-        .ready              (ready)
+        .fsm_state          (fsm_state_i)
     );
-
-	// assign init_branch1 = init_branch1_i;
-	// assign init_branch2 = init_branch2_i;
-    // assign valid_branch = valid_branch_i;
-
-	// assign alpha_0 = alpha_0_i;
-    // assign alpha_1 = alpha_1_i;
-    // assign alpha_2 = alpha_2_i;
-    // assign alpha_3 = alpha_3_i;
-    // assign alpha_4 = alpha_4_i;
-    // assign alpha_5 = alpha_5_i;
-    // assign alpha_6 = alpha_6_i;
-    // assign alpha_7 = alpha_7_i;
-    // assign valid_alpha = valid_alpha_i;
 
 endmodule

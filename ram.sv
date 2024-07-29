@@ -27,12 +27,12 @@ input [12:0] addr;
 input [15:0] di;
 output [15:0] dout;
 
-(*rom_style = "block" *) reg [15:0] ram [6144 + 2:0];
+reg [15:0] ram [6144 + 3:0];
 reg [15:0] dout;
 
 initial
 begin
-	for (int k = 0; k < 6144 + 3; k++) begin 
+	for (int k = 0; k < 6144 + 4; k++) begin 
         ram[k] = 0;
     end
 end
