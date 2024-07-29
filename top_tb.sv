@@ -120,9 +120,13 @@ module top_tb(
 		input integer check_file
 	);
 
-    case (check_file)
-        extrinsic_512: begin ext_out = $fopen("extrinsic_512.txt", "r");	end
-        extrinsic_6144: begin ext_out = $fopen("extrinsic_6144.txt", "r");	end
+	case (check_file)
+        extrinsic_512: begin
+	    	ext_out = $fopen("extrinsic_512.txt", "r");
+        end	
+        extrinsic_6144: begin
+ 			ext_out = $fopen("extrinsic_6144.txt", "r");
+        end
     endcase
 
 		@(posedge valid_extrinsic)
@@ -130,7 +134,7 @@ module top_tb(
 		while (valid_extrinsic) begin
 			@(posedge clk_i)
 			counter_i = counter_i + 1;
-			$fgets(line_ext,ext_out);
+			$fgets(line_ext, ext_out);
 			$display(counter_i, line_ext.atoi(), $signed(extrinsic));
        		if (line_ext.atoi() !== $signed(extrinsic))
 				$display ("error_sub_llr");
@@ -138,6 +142,10 @@ module top_tb(
 	endtask : check
 
 
+	initial begin
+        	extrinsic_512 = $fopen("extrinsic_512.txt", "r");
+			extrinsic_6144 = $fopen("extrinsic_6144.txt", "r");
+	end
 	// always_comb begin
 	// if (valid_beta) begin
 	// 	counter_i = counter_i + 1;

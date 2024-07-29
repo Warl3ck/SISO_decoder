@@ -407,10 +407,8 @@ module beta_llr #(
 
 	always_ff @(posedge clk)
 	begin
-		if (sub_llr_sys_apriori[1][15])
-			extrinsic_i <= sub_llr_sys_apriori[1] - (- sub_llr_sys_apriori_round);
-		else
-			extrinsic_i <= sub_llr_sys_apriori[1] - sub_llr_sys_apriori_round;
+		// if (sub_llr_sys_apriori[1][15])
+			extrinsic_i <= (sub_llr_sys_apriori[1][15]) ? sub_llr_sys_apriori[1] - (- sub_llr_sys_apriori_round) : sub_llr_sys_apriori[1] - sub_llr_sys_apriori_round;
 	end
 
 	ram ram_sys_inst
