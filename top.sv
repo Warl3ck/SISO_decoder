@@ -33,6 +33,8 @@ module top
     valid_blklen,
 	valid_extrinsic,
 	extrinsic,
+    llr,
+    valid_llr
 );
 
     input clk;
@@ -45,6 +47,8 @@ module top
     input [15:0] apriori;
 	output valid_extrinsic;
 	output [15:0] extrinsic;
+    output [15:0] llr;
+	output valid_llr;
 
     wire [15:0] sys;
     wire [15:0] parity;
@@ -99,7 +103,8 @@ module top
         .fsm_state          (fsm_state_i)
     );
 
-    beta_llr beta_llr_inst 
+    beta_llr #(.blklen_w(6144))
+    beta_llr_inst 
     (
         .clk                (clk),
         .rst                (rst),
@@ -124,6 +129,8 @@ module top
         .blklen         	(blklen),
 		.valid_extrinsic	(valid_extrinsic),
 		.extrinsic			(extrinsic),
+        .llr_out            (llr),
+		.valid_llr          (valid_llr),
         .fsm_state          (fsm_state_i)
     );
 

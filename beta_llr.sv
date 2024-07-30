@@ -45,6 +45,8 @@ module beta_llr #(
         blklen,
 		valid_extrinsic,
 		extrinsic,
+		llr_out,
+		valid_llr,
 		fsm_state
     );
 
@@ -70,10 +72,14 @@ module beta_llr #(
     input valid_blklen;
 	output valid_extrinsic;
 	output [15:0] extrinsic;
+	output [15:0] llr_out;
+	output valid_llr;
 	output [1:0] fsm_state;
 
 	reg [15:0] sys_i;
 	reg [15:0] apriori_i;
+	reg [15:0] sys_i_del [7];
+	reg [15:0] apriori_i_del [7];
     reg signed [15:0] sub_llr_sys_apriori [2];
 	reg [15:0] sub_llr_sys_apriori_un;
 	reg [15:0] sub_llr_sys_apriori_round;
@@ -131,8 +137,6 @@ module beta_llr #(
 	reg [15:0] alpha_reg [7:0];
 	reg [3:0] enable;
 
-	reg  [15:0] extrinsic_array [blklen_w + 4];
-
 	reg valid_i;
 	reg [0:7] valid_extrinsic_i;
     reg [15:0] extrinsic_i;
@@ -144,6 +148,26 @@ module beta_llr #(
 	wire signed [15:0] init_branch1_dout;
 	wire signed [15:0] init_branch2_dout;
 	wire [15:0] counter_init_branch;
+
+	reg [15:0] llr_dout;
+	reg llr_valid;
+	wire [15:0] llr_ram_dout;
+	reg [15:0] llr;
+
+	reg [15:0] buff [4];
+	reg [15:0] buff_llr [3];
+	reg [15:0] buff_out;
+	reg [15:0] buff_out_llr;
+	reg [15:0] counter_ext;
+	reg [15:0] counter_llr;
+	reg valid_ex;
+	reg [15:0] extrinsic_ram;
+	wire [15:0] ram_dout;
+
+	reg [15:0] sys_reg [3];
+	reg [0:2] valid_sys_reg;
+	reg [15:0] apriori_reg [3];
+	reg [0:2] valid_apriori_reg;
 
 
     // FSM
@@ -175,7 +199,7 @@ module beta_llr #(
 						else						    	next_state = CALCULATE_1;
 		end
 		SAVE_ARRAY 		: begin
-						if (counter == blklen + 10)			next_state = IDLE;
+						if (counter == blklen + 4)			next_state = IDLE;
 						else						    	next_state = SAVE_ARRAY;
 		end
 		endcase
@@ -205,11 +229,11 @@ module beta_llr #(
 							valid_i <= 1'b0;
 							extrinsic_a <= {16{1'b0}};
 							valid_ex_a <= 1'b0;
+							valid_ex <= 1'b0;
 			end
 			CALCULATE_0		: begin
-                            if (valid_branch) begin
+                            if (valid_branch) 
 								counter <= counter + 1;    
-                            end
 			end
 			CALCULATE_1		: begin
 
@@ -270,23 +294,30 @@ module beta_llr #(
             				llr_2[6] <= sub_alpha_init_branch2[6] + beta_reg_7[15:0];
             				llr_2[7] <= sub_alpha_init_branch2[7] + beta_reg_3[15:0];	
 
-
-							if (valid_extrinsic_i[7])
-								extrinsic_array <= {extrinsic_i, extrinsic_array[0:blklen_w + 2]};
+							if (counter < blklen - 2) begin
+								llr <= llr_i_reg;
+								llr_valid <= valid_extrinsic_i[3];
+							end
 								
             end        
 			SAVE_ARRAY		: begin
 							valid_i <= 1'b0;
+							buff_out <= buff[counter];
+							buff_out_llr <= buff_llr[counter];
 
-							if (valid_extrinsic_i[5])
-								extrinsic_array <= {extrinsic_i, extrinsic_array[0:blklen_w + 2]};
+							buff <= ((valid_extrinsic_i[5])) ? {extrinsic_i, buff[0:2]} : buff;
+							buff_llr <= (valid_extrinsic_i[3]) ? {llr_i_reg, buff_llr[0:1]} : buff_llr;
 
-							if (counter > 6) begin
-								extrinsic_a <= extrinsic_array[counter - 7];
-								valid_ex_a <= 1'b1;
+							if (valid_extrinsic_i[5] || valid_extrinsic_i[6])
+								counter <= counter;
+							else begin
+								counter <= (counter != blklen + 10) ? counter + 1 : counter;
+								valid_ex <= (counter > 0) ? 1'b1 : 1'b0;
 							end
-							counter <= (counter != blklen + 10) ? counter + 1 : counter;
-			end            
+
+							extrinsic_ram <= (counter > 4) ? ram_dout : buff_out;
+							llr_dout <= (counter > 3) ? llr_ram_dout : buff_out_llr;
+			end
 	        endcase
         end
 
@@ -346,7 +377,6 @@ module beta_llr #(
 		end else begin
 			valid_extrinsic_i <= {valid_i, valid_extrinsic_i[0:6]};
 			llr_i_reg <= llr_i;
-
 		end
 	end
 
@@ -386,7 +416,7 @@ module beta_llr #(
 				sub_llr_sys_apriori[i] <= {16{1'b0}};
 			end
 		end else begin
-			sub_llr_sys_apriori[0] <= llr_i_reg - sys_i - apriori_i; 
+			sub_llr_sys_apriori[0] <= llr_i_reg - sys_i_del[4] - apriori_i_del[4]; 
 			sub_llr_sys_apriori[1] <= sub_llr_sys_apriori[0];
 		end
 	end
@@ -407,25 +437,52 @@ module beta_llr #(
 
 	always_ff @(posedge clk)
 	begin
-		// if (sub_llr_sys_apriori[1][15])
-			extrinsic_i <= (sub_llr_sys_apriori[1][15]) ? sub_llr_sys_apriori[1] - (- sub_llr_sys_apriori_round) : sub_llr_sys_apriori[1] - sub_llr_sys_apriori_round;
+		if (rst)
+		 	extrinsic_i <= {16{1'b0}};
+		else if (sub_llr_sys_apriori[1][15])
+			extrinsic_i <= sub_llr_sys_apriori[1] - (- sub_llr_sys_apriori_round);
+		else
+			extrinsic_i <= sub_llr_sys_apriori[1] - sub_llr_sys_apriori_round;
+	end
+
+	always_ff @(posedge clk)
+	begin
+		if (rst) begin
+			for (int i = 0; i < 3; i++) begin
+				sys_reg[i] <= {16{1'b0}};
+				apriori_reg[i] <= {16{1'b0}};
+			end
+			for (int i = 0; i < 7; i++) begin
+				sys_i_del[i] <= {16{1'b0}};
+				apriori_i_del[i] <= {16{1'b0}};
+			end
+			valid_sys_reg <= {3{1'b0}};
+			valid_apriori_reg <= {3{1'b0}};
+		end else begin
+			sys_reg <= {sys, sys_reg [0:1]};
+			valid_sys_reg <= {valid_sys, valid_sys_reg[0:1]};
+			apriori_reg <= {apriori, apriori_reg [0:1]};
+			valid_apriori_reg <= {valid_apriori, valid_apriori_reg[0:1]};
+			sys_i_del <= {sys_i, sys_i_del[0:5]};
+			apriori_i_del <= {apriori_i, apriori_i_del[0:5]};
+		end
 	end
 
 	ram ram_sys_inst
 	(
 		.clk	(clk),
-		.we		(valid_sys),
-		.addr	(counter),
-		.di		(sys),
+		.we		(valid_sys_reg[1]),
+		.addr	(counter_init_branch),
+		.di		(sys_reg[1]),
 		.dout	(sys_i)
 	);
 
 	ram ram_apriori_inst
 	(
 		.clk	(clk),
-		.we		(valid_apriori),
-		.addr	(counter),
-		.di		(apriori),
+		.we		(valid_apriori_reg[1]),
+		.addr	(counter_init_branch),
+		.di		(apriori_reg[1]),
 		.dout	(apriori_i)
 	);
 
@@ -469,19 +526,35 @@ module beta_llr #(
 		.dout	(alpha_reg[7:4])
 	);
 
-	// assign we_extrinsic_ram = (state == CALCULATE_1) ? (valid_extrinsic_i[7]) : (state == SAVE_ARRAY) ? valid_extrinsic_i[5] : 1'b0;
+	assign we_extrinsic_ram = (state == CALCULATE_1) ? (valid_extrinsic_i[7]) : we_extrinsic_ram;
 
-	// ram extrinsic_array_inst
-	// (
-	// 	.clk	(clk),
-	// 	.we		(we_extrinsic_ram),
-	// 	.addr	(counter),
-	// 	.di		(extrinsic_i),
-	// 	.dout	(ram_dout)
-	// );
+	ram extrinsic_array_inst
+	(
+		.clk	(clk),
+		.we		(we_extrinsic_ram),
+		.addr	(counter_ext),
+		.di		(extrinsic_i),
+		.dout	(ram_dout)
+	);
 
-	assign extrinsic = extrinsic_a; 
-	assign valid_extrinsic = valid_ex_a; 
+	ram llr_inst
+	(
+		.clk	(clk),
+		.we		(llr_valid),
+		.addr	(counter_ext),
+		.di		(llr),
+		.dout	(llr_ram_dout)
+	);
+
+	assign counter_ext = (state == CALCULATE_1) ? counter : counter - 3;
+	assign counter_llr = (state == CALCULATE_1) ? counter : counter - 4;
+
+
+	assign extrinsic = extrinsic_ram; 
+	assign valid_extrinsic = valid_ex; 
+
+	assign llr_out = llr_dout;
+	assign valid_llr = (counter > blklen + 1) ? 1'b0 : valid_ex;
 
 	assign fsm_state = state;
 
