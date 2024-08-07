@@ -55,25 +55,14 @@ module alpha
     output [15:0] alpha_7;
     output valid_alpha;
 
-    reg signed [18:0] alpha_1_i [0:1];
-    reg signed [18:0] alpha_0_i [0:1]; 
-    reg signed [18:0] alpha_2_i [0:1];
-    reg signed [18:0] alpha_3_i [0:1];
-    reg signed [18:0] alpha_4_i [0:1];
-    reg signed [18:0] alpha_5_i [0:1];
-    reg signed [18:0] alpha_6_i [0:1];
-    reg signed [18:0] alpha_7_i [0:1];
-
-	reg [18:0] alpha_1_sub;
-    reg [18:0] alpha_0_sub; 
-    reg [18:0] alpha_2_sub;
-    reg [18:0] alpha_3_sub;
-    reg [18:0] alpha_4_sub;
-    reg [18:0] alpha_5_sub;
-    reg [18:0] alpha_6_sub;
-    reg [18:0] alpha_7_sub;
-
-
+    reg signed [20:0] alpha_1_i [0:1];
+    reg signed [20:0] alpha_0_i [0:1]; 
+    reg signed [20:0] alpha_2_i [0:1];
+    reg signed [20:0] alpha_3_i [0:1];
+    reg signed [20:0] alpha_4_i [0:1];
+    reg signed [20:0] alpha_5_i [0:1];
+    reg signed [20:0] alpha_6_i [0:1];
+    reg signed [20:0] alpha_7_i [0:1];
 
     // reg [15:0] counter_alpha = 0;
 
@@ -112,24 +101,14 @@ module alpha
         end
     end
 
-	assign alpha_0_sub = (alpha_0_i[1] - alpha_0_i[0]);
-    assign alpha_1_sub = (alpha_1_i[1] - alpha_0_i[0]);
-    assign alpha_2_sub = (alpha_2_i[1] - alpha_0_i[0]);
-    assign alpha_3_sub = (alpha_3_i[1] - alpha_0_i[0]);
-    assign alpha_4_sub = (alpha_4_i[1] - alpha_0_i[0]);
-    assign alpha_5_sub = (alpha_5_i[1] - alpha_0_i[0]);
-    assign alpha_6_sub = (alpha_6_i[1] - alpha_0_i[0]);
-    assign alpha_7_sub = (alpha_7_i[1] - alpha_0_i[0]);
-
-	assign alpha_0 = alpha_0_sub[15:0]; 
-	assign alpha_1 = alpha_1_sub[15:0]; 
-	assign alpha_2 = alpha_2_sub[15:0]; 
-	assign alpha_3 = alpha_3_sub[15:0]; 
-	assign alpha_4 = alpha_4_sub[15:0]; 
-	assign alpha_5 = alpha_5_sub[15:0]; 
-	assign alpha_6 = alpha_6_sub[15:0]; 
-	assign alpha_7 = alpha_7_sub[15:0]; 
-
+	assign alpha_0 = alpha_0_i[1] - alpha_0_i[0];
+    assign alpha_1 = alpha_1_i[1] - alpha_0_i[0];
+    assign alpha_2 = alpha_2_i[1] - alpha_0_i[0];
+    assign alpha_3 = alpha_3_i[1] - alpha_0_i[0];
+    assign alpha_4 = alpha_4_i[1] - alpha_0_i[0];
+    assign alpha_5 = alpha_5_i[1] - alpha_0_i[0];
+    assign alpha_6 = alpha_6_i[1] - alpha_0_i[0];
+    assign alpha_7 = alpha_7_i[1] - alpha_0_i[0];        
     assign valid_alpha = valid_branch;
 
 

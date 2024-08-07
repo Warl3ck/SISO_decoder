@@ -95,31 +95,33 @@ module beta_llr #(
 	reg [15:0] alpha_6_reg;
 	reg [15:0] alpha_7_reg;
 
-	reg signed [18:0] beta_0_i [0:1];
-    reg signed [18:0] beta_1_i [0:1];
-    reg signed [18:0] beta_2_i [0:1];
-    reg signed [18:0] beta_3_i [0:1];
-    reg signed [18:0] beta_4_i [0:1];
-    reg signed [18:0] beta_5_i [0:1];
-    reg signed [18:0] beta_6_i [0:1];
-    reg signed [18:0] beta_7_i [0:1];
+	reg signed [20:0] beta_0_i [0:1];
+    reg signed [20:0] beta_1_i [0:1];
+    reg signed [20:0] beta_2_i [0:1];
+    reg signed [20:0] beta_3_i [0:1];
+    reg signed [20:0] beta_4_i [0:1];
+    reg signed [20:0] beta_5_i [0:1];
+    reg signed [20:0] beta_6_i [0:1];
+    reg signed [20:0] beta_7_i [0:1];
 	//
-    reg [18:0] beta_reg_0;
-    reg [18:0] beta_reg_1;
-    reg [18:0] beta_reg_2;
-    reg [18:0] beta_reg_3;
-    reg [18:0] beta_reg_4;
-    reg [18:0] beta_reg_5;
-    reg [18:0] beta_reg_6;
-    reg [18:0] beta_reg_7;
+    reg [15:0] beta_reg_0;
+    reg [15:0] beta_reg_1;
+    reg [15:0] beta_reg_2;
+    reg [15:0] beta_reg_3;
+    reg [15:0] beta_reg_4;
+    reg [15:0] beta_reg_5;
+    reg [15:0] beta_reg_6;
+    reg [15:0] beta_reg_7;
     //
     reg [15:0] sub_alpha_init_branch1 [8];
 	reg [15:0] sub_alpha_init_branch2 [8];
 
-    reg signed [15:0] llr_1 [8];
-    reg signed [15:0] llr_2 [8];
-	reg [15:0] llr_1_reg [8];
-    reg [15:0] llr_2_reg [8];
+
+	typedef struct  {
+		reg signed [15:0] llr_1 [8];
+    	reg signed [15:0] llr_2 [8];
+	} llr_first;
+
     reg signed [15:0] llr_1_max_0 [4];
     reg signed [15:0] llr_2_max_0 [4];
 	reg signed [15:0] llr_1_max_0_reg [4];
@@ -143,7 +145,6 @@ module beta_llr #(
 	reg [15:0] llr_sys_apriori_predivide;
 	reg [15:0] llr_sys_apriori_divide;
 	reg [15:0] extrinsic_a;
-	reg valid_ex_a;
 
 	wire signed [15:0] init_branch1_dout;
 	wire signed [15:0] init_branch2_dout;
@@ -174,6 +175,7 @@ module beta_llr #(
     typedef enum reg[1:0] { IDLE, CALCULATE_0, CALCULATE_1, SAVE_ARRAY } statetype;
     statetype state, next_state;
 
+	llr_first llr_f;
 
     always_ff @(posedge clk)
 	begin
@@ -190,7 +192,7 @@ module beta_llr #(
 						if (valid_blklen)  			    	next_state = CALCULATE_0;
 						else						    	next_state = IDLE;
 		end
-		CALCULATE_0		: 	begin
+		CALCULATE_0		: begin
 						if (counter == blklen + 4)	    	next_state = CALCULATE_1;
 						else						    	next_state = CALCULATE_0;
 		end
@@ -209,8 +211,8 @@ module beta_llr #(
 	begin
 		case (state)
 			IDLE 			: begin
-	                        counter <= 0;
-                            for (int k = 0; k < 2; k++) begin 
+	                        counter <= {16{1'b0}};
+                            foreach (beta_0_i[k]) begin 
                                 beta_0_i[k] = 0;
                                 beta_1_i[k] = -128;
                                 beta_2_i[k] = -128;
@@ -221,14 +223,13 @@ module beta_llr #(
                                 beta_7_i[k] = -128;
                             end
 
-							for (int i = 0; i < 8; i++) begin
+							foreach (sub_alpha_init_branch1[i]) begin
 								sub_alpha_init_branch1[i] <= {16{1'b0}};
 								sub_alpha_init_branch2[i] <= {16{1'b0}};
 							end
 
 							valid_i <= 1'b0;
 							extrinsic_a <= {16{1'b0}};
-							valid_ex_a <= 1'b0;
 							valid_ex <= 1'b0;
 			end
 			CALCULATE_0		: begin
@@ -277,22 +278,22 @@ module beta_llr #(
     						sub_alpha_init_branch2[6] <= alpha_6_reg + init_branch1_dout;
     						sub_alpha_init_branch2[7] <= alpha_7_reg + init_branch1_dout;	
 
-							llr_1[0] <= sub_alpha_init_branch1[0] + beta_reg_4[15:0];  
-							llr_1[1] <= sub_alpha_init_branch1[1] + beta_reg_0[15:0];
-            				llr_1[2] <= sub_alpha_init_branch1[2] + beta_reg_1[15:0];
-            				llr_1[3] <= sub_alpha_init_branch1[3] + beta_reg_5[15:0];
-            				llr_1[4] <= sub_alpha_init_branch1[4] + beta_reg_6[15:0];
-            				llr_1[5] <= sub_alpha_init_branch1[5] + beta_reg_2[15:0];
-            				llr_1[6] <= sub_alpha_init_branch1[6] + beta_reg_3[15:0];
-            				llr_1[7] <= sub_alpha_init_branch1[7] + beta_reg_7[15:0];
-            				llr_2[0] <= sub_alpha_init_branch2[0] + beta_reg_0[15:0]; 
-            				llr_2[1] <= sub_alpha_init_branch2[1] + beta_reg_4[15:0];
-            				llr_2[2] <= sub_alpha_init_branch2[2] + beta_reg_5[15:0];
-            				llr_2[3] <= sub_alpha_init_branch2[3] + beta_reg_1[15:0];
-            				llr_2[4] <= sub_alpha_init_branch2[4] + beta_reg_2[15:0];
-            				llr_2[5] <= sub_alpha_init_branch2[5] + beta_reg_6[15:0];
-            				llr_2[6] <= sub_alpha_init_branch2[6] + beta_reg_7[15:0];
-            				llr_2[7] <= sub_alpha_init_branch2[7] + beta_reg_3[15:0];	
+							llr_f.llr_1[0] <= sub_alpha_init_branch1[0] + beta_reg_4;  
+							llr_f.llr_1[1] <= sub_alpha_init_branch1[1] + beta_reg_0;
+            				llr_f.llr_1[2] <= sub_alpha_init_branch1[2] + beta_reg_1;
+            				llr_f.llr_1[3] <= sub_alpha_init_branch1[3] + beta_reg_5;
+            				llr_f.llr_1[4] <= sub_alpha_init_branch1[4] + beta_reg_6;
+            				llr_f.llr_1[5] <= sub_alpha_init_branch1[5] + beta_reg_2;
+            				llr_f.llr_1[6] <= sub_alpha_init_branch1[6] + beta_reg_3;
+            				llr_f.llr_1[7] <= sub_alpha_init_branch1[7] + beta_reg_7;
+            				llr_f.llr_2[0] <= sub_alpha_init_branch2[0] + beta_reg_0; 
+            				llr_f.llr_2[1] <= sub_alpha_init_branch2[1] + beta_reg_4;
+            				llr_f.llr_2[2] <= sub_alpha_init_branch2[2] + beta_reg_5;
+            				llr_f.llr_2[3] <= sub_alpha_init_branch2[3] + beta_reg_1;
+            				llr_f.llr_2[4] <= sub_alpha_init_branch2[4] + beta_reg_2;
+            				llr_f.llr_2[5] <= sub_alpha_init_branch2[5] + beta_reg_6;
+            				llr_f.llr_2[6] <= sub_alpha_init_branch2[6] + beta_reg_7;
+            				llr_f.llr_2[7] <= sub_alpha_init_branch2[7] + beta_reg_3;	
 
 							if (counter < blklen - 2) begin
 								llr <= llr_i_reg;
@@ -330,30 +331,35 @@ module beta_llr #(
     assign beta_reg_6 = beta_6_i[1] - beta_0_i[0];
     assign beta_reg_7 = beta_7_i[1] - beta_0_i[0];
 
+
+
 	always_comb
 	begin
 		if (valid_i) begin                  				                            
-            llr_1_max_0[0] = (llr_1[1] > llr_1[0]) ? llr_1[1] : llr_1[0];
-			llr_1_max_0[1] = (llr_1[3] > llr_1[2]) ? llr_1[3] : llr_1[2];
-			llr_1_max_0[2] = (llr_1[5] > llr_1[4]) ? llr_1[5] : llr_1[4];
-			llr_1_max_0[3] = (llr_1[7] > llr_1[6]) ? llr_1[7] : llr_1[6];
-			llr_2_max_0[0] = (llr_2[1] > llr_2[0]) ? llr_2[1] : llr_2[0];
-			llr_2_max_0[1] = (llr_2[3] > llr_2[2]) ? llr_2[3] : llr_2[2];
-			llr_2_max_0[2] = (llr_2[5] > llr_2[4]) ? llr_2[5] : llr_2[4];
-			llr_2_max_0[3] = (llr_2[7] > llr_2[6]) ? llr_2[7] : llr_2[6];
+            llr_1_max_0[0] = (llr_f.llr_1[1] > llr_f.llr_1[0]) ? llr_f.llr_1[1] : llr_f.llr_1[0];
+			llr_1_max_0[1] = (llr_f.llr_1[3] > llr_f.llr_1[2]) ? llr_f.llr_1[3] : llr_f.llr_1[2];
+			llr_1_max_0[2] = (llr_f.llr_1[5] > llr_f.llr_1[4]) ? llr_f.llr_1[5] : llr_f.llr_1[4];
+			llr_1_max_0[3] = (llr_f.llr_1[7] > llr_f.llr_1[6]) ? llr_f.llr_1[7] : llr_f.llr_1[6];
+			llr_2_max_0[0] = (llr_f.llr_2[1] > llr_f.llr_2[0]) ? llr_f.llr_2[1] : llr_f.llr_2[0];
+			llr_2_max_0[1] = (llr_f.llr_2[3] > llr_f.llr_2[2]) ? llr_f.llr_2[3] : llr_f.llr_2[2];
+			llr_2_max_0[2] = (llr_f.llr_2[5] > llr_f.llr_2[4]) ? llr_f.llr_2[5] : llr_f.llr_2[4];
+			llr_2_max_0[3] = (llr_f.llr_2[7] > llr_f.llr_2[6]) ? llr_f.llr_2[7] : llr_f.llr_2[6];
 		end
 	end
 
 	always_ff @(posedge clk)
 	begin
-		llr_1_max_0_reg[0] <= llr_1_max_0[0];
-		llr_1_max_0_reg[1] <= llr_1_max_0[1];
-		llr_1_max_0_reg[2] <= llr_1_max_0[2];
-		llr_1_max_0_reg[3] <= llr_1_max_0[3];
-		llr_2_max_0_reg[0] <= llr_2_max_0[0];
-		llr_2_max_0_reg[1] <= llr_2_max_0[1];
-		llr_2_max_0_reg[2] <= llr_2_max_0[2];
-		llr_2_max_0_reg[3] <= llr_2_max_0[3];
+		if (rst)
+			foreach (llr_1_max_0_reg[i]) begin
+				llr_1_max_0_reg[i] <= {16{1'b0}};
+				llr_2_max_0_reg[i] <= {16{1'b0}};
+			end
+		else begin	 
+			foreach (llr_1_max_0_reg[i]) begin
+				llr_1_max_0_reg[i] <= llr_1_max_0[i];
+				llr_2_max_0_reg[i] <= llr_2_max_0[i];
+			end
+		end
 	end
 
 	always_comb
@@ -412,9 +418,8 @@ module beta_llr #(
 	always_ff @(posedge clk)
 	begin
 		if (rst) begin
-			for (int i = 0; i < 2; i++) begin
+			foreach (sub_llr_sys_apriori[i])
 				sub_llr_sys_apriori[i] <= {16{1'b0}};
-			end
 		end else begin
 			sub_llr_sys_apriori[0] <= llr_i_reg - sys_i_del[4] - apriori_i_del[4]; 
 			sub_llr_sys_apriori[1] <= sub_llr_sys_apriori[0];
@@ -435,24 +440,25 @@ module beta_llr #(
 			sub_llr_sys_apriori_round <= (sub_llr_round) ? llr_sys_apriori_divide + 1 : llr_sys_apriori_divide;
 	end 
 
+
 	always_ff @(posedge clk)
 	begin
 		if (rst)
 		 	extrinsic_i <= {16{1'b0}};
 		else if (sub_llr_sys_apriori[1][15])
 			extrinsic_i <= sub_llr_sys_apriori[1] - (- sub_llr_sys_apriori_round);
-		else
+		else 
 			extrinsic_i <= sub_llr_sys_apriori[1] - sub_llr_sys_apriori_round;
 	end
 
 	always_ff @(posedge clk)
 	begin
 		if (rst) begin
-			for (int i = 0; i < 3; i++) begin
+			foreach (sys_reg[i]) begin
 				sys_reg[i] <= {16{1'b0}};
 				apriori_reg[i] <= {16{1'b0}};
 			end
-			for (int i = 0; i < 7; i++) begin
+			foreach (sys_i_del[i]) begin
 				sys_i_del[i] <= {16{1'b0}};
 				apriori_i_del[i] <= {16{1'b0}};
 			end
@@ -557,5 +563,6 @@ module beta_llr #(
 	assign valid_llr = (counter > blklen + 1) ? 1'b0 : valid_ex;
 
 	assign fsm_state = state;
+
 
     endmodule

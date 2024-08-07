@@ -34,30 +34,29 @@ module top_tb(
     bit valid_apriori, valid_apriori_i;
     bit [15:0] blklen;
     bit valid_blklen;
-    bit [15:0] extrinsic;
+    wire signed [15:0] extrinsic;
     bit valid_extrinsic;
     bit [15:0] counter_i;
 	wire ready_i;
-
-
-	integer extrinsic_512, LLR_512, extrinsic_6144, LLR_6144;
-	integer sys_f, llr_f, ext_out;
-
-	string line, line_llr, line_ext, line_sub_llr;
-	integer in_f, apriori_f;
-
-    wire valid_alpha_i;
-	wire [15:0] llr;
+	wire signed [15:0] llr;
 	wire valid_llr;
 
-    event reset_complete;
+	integer extrinsic_512, LLR_512, extrinsic_6144, LLR_6144;
+    integer extrinsic_out, llr_out;
+	integer sys_f, llr_f, ext_out;
+	integer in_f, apriori_f;
+    integer clk_counter = 1;
+
+	string line, line_llr, line_ext, line_sub_llr;
+
+    event reset_complete, check_file_done;
+
 
 	always #(CLK_PERIOD/2) clk_i = ~clk_i;
 	
-    task write
-    ( 
-		input integer num
-	);
+    task write  ( 
+	            	input integer num
+	            );
 
     case (num)
         512: begin
@@ -66,8 +65,8 @@ module top_tb(
             blklen = 512;
         end	
         6144: begin
-            in_f = $fopen("in_6144.txt", "r");	
-            apriori_f = $fopen("apriori_6144.txt", "r");
+            in_f = $fopen("dec_in6144.txt", "r");	
+            apriori_f = $fopen("dec_apriori6144.txt", "r");
             blklen = 6144;
         end
     endcase
@@ -94,48 +93,77 @@ module top_tb(
 	endtask : write
 
 
-	task check
-	( 
-		input integer check_file_extrinsic
-	);
+	task check  ( 
+	            	input integer check_file_extrinsic
+	            );
 
-	case (check_file_extrinsic)
-        extrinsic_512: begin
-	    	ext_out = $fopen("extrinsic_512.txt", "r");
-			llr_f = $fopen("LLR_512.txt", "r");
-        end	
-        extrinsic_6144: begin
- 			ext_out = $fopen("extrinsic_6144.txt", "r");
-			llr_f = $fopen("LLR_6144.txt", "r");
-        end
-    endcase
+	    case (check_file_extrinsic)
+            extrinsic_512: begin
+	        	ext_out = $fopen("extrinsic_512.txt", "r");
+	    		llr_f = $fopen("LLR_512.txt", "r");
+                extrinsic_out = $fopen("extrinsic_out_512.txt", "w");
+                llr_out = $fopen("llr_out_512.txt", "w");
+            end	
+            extrinsic_6144: begin
+ 	    		ext_out = $fopen("extrinsic_6144.txt", "r");
+	    		llr_f = $fopen("LLR_6144.txt", "r");
+                extrinsic_out = $fopen("extrinsic_out_6144.txt", "w");
+                llr_out = $fopen("llr_out_6144.txt", "w");
+            end
+        endcase
 
-		@(posedge valid_extrinsic)
-		counter_i = 0;
-		while (valid_extrinsic) begin
-			@(posedge clk_i) 
-			if (valid_extrinsic) begin
-				counter_i = counter_i + 1;
-				$fgets(line_ext, ext_out);
-				if (valid_llr) begin
-					$fgets(line_llr, llr_f);
-					$display(counter_i, line_ext.atoi(), $signed(extrinsic), line_llr.atoi(), $signed(llr));
-       				if ((line_ext.atoi() !== $signed(extrinsic)) || (line_llr.atoi() !== $signed(llr)))
-					$display ("error");
-				end else begin
-					$display(counter_i, line_ext.atoi(), $signed(extrinsic));
-       				if ((line_ext.atoi() !== $signed(extrinsic)))
-					$display ("error");
-				end
-			end
-		end
+	    @(posedge valid_extrinsic)
+	    counter_i = 0;
+        $display("Number of tacts:", clk_counter);
+	    while (valid_extrinsic) begin
+	    	@(posedge clk_i) 
+	    	if (valid_extrinsic) begin
+	    		counter_i = counter_i + 1;
+	    		$fgets(line_ext, ext_out);
+	    		if (valid_llr) begin
+	    			$fgets(line_llr, llr_f);
+	    			$display(counter_i, line_ext.atoi(), $signed(extrinsic), line_llr.atoi(), $signed(llr));
+                    $fdisplay(extrinsic_out, extrinsic);
+                    $fdisplay(llr_out, llr);
+        			if ((line_ext.atoi() !== $signed(extrinsic)) || (line_llr.atoi() !== $signed(llr))) begin
+	    			    $display ("error");
+                        $finish;
+                    end
+	    		end else begin
+	    			$display(counter_i, line_ext.atoi(), $signed(extrinsic));
+                    $fdisplay(extrinsic_out, extrinsic);
+        			if ((line_ext.atoi() !== $signed(extrinsic))) begin
+	    			    $display ("error");
+                        $finish;
+                    end
+	    		end
+	    	end
+	    end
+        -> check_file_done;
 	endtask : check
+
+    
+    task check_clk_count    ( 
+    	                    );
+        @(posedge valid);
+        forever begin
+            @(posedge clk_i);
+            clk_counter = clk_counter + 1;
+            if (valid_extrinsic)
+                break; 
+        end
+        clk_counter = 1;
+    endtask : check_clk_count
+
 
 	initial begin
         extrinsic_512 = $fopen("extrinsic_512.txt", "r");
 		extrinsic_6144 = $fopen("extrinsic_6144.txt", "r");
 	end
 
+    always_ff @(posedge clk_i) begin
+        valid_apriori_i <= valid_apriori;
+    end
 	
 	initial begin
         valid_blklen <= 1'b0;
@@ -145,7 +173,15 @@ module top_tb(
 		@(posedge clk_i);
 		rst <= 1'b0;
         -> reset_complete;
+        check_clk_count;
+        @(check_file_done);
+        check_clk_count;
+        // @(check_file_done);
+        // check_clk_count;
+        // @(check_file_done);
+        // check_clk_count;
 	end
+
 
     initial begin
         @(reset_complete);
@@ -156,15 +192,11 @@ module top_tb(
 		write(6144);
 		check(.check_file_extrinsic(extrinsic_6144));
 		// 
-		write(6144);
-		check(.check_file_extrinsic(extrinsic_6144));
-		//
-        write(512);
-		check(.check_file_extrinsic(extrinsic_512));
-    end
-
-    always_ff @(posedge clk_i) begin
-        valid_apriori_i <= valid_apriori;
+		// write(6144);
+		// check(.check_file_extrinsic(extrinsic_6144));
+		// //
+        // write(512);
+		// check(.check_file_extrinsic(extrinsic_512));
     end
 
     top top_inst
@@ -182,5 +214,7 @@ module top_tb(
 		.llr				(llr),
 		.valid_llr			(valid_llr)
     );
+
+
 
 endmodule
